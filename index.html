@@ -126,10 +126,8 @@ footer p{margin-bottom:5px}
 .debug-status .dot.ok{background:var(--emerald)}
 </style>
 <base target="_blank">
-<base target="_blank">
 </head>
 <body>
-<!-- VPN / Security Block Overlay -->
 <div id="securityBlock" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:#0d0418;z-index:9999;align-items:center;justify-content:center;flex-direction:column;text-align:center;padding:40px">
   <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#e74c3c" stroke-width="1.5" style="margin-bottom:20px"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
   <h2 style="font-family:Cinzel,serif;color:#e74c3c;font-size:1.8rem;margin-bottom:15px">Access Denied</h2>
@@ -140,7 +138,7 @@ footer p{margin-bottom:5px}
 <div class="session-check" id="sessionCheck"><div class="spinner"></div><p>Checking session...</p></div>
 <div class="particles" id="particles"></div>
 <nav class="navbar">
-  <a href="#" class="nav-brand">
+  <a href="#" class="nav-brand" onclick="return false;">
     <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#f4d03f" stroke-width="1.5" style="vertical-align:middle"><path d="M12 2L15 8L21 9L17 14L18 20L12 17L6 20L7 14L3 9L9 8Z"/></svg>
     CrownCash
   </a>
@@ -183,6 +181,18 @@ footer p{margin-bottom:5px}
       <div class="earn-box">
         <div><h3>MyLead Offerwall</h3><p>4,000+ incent campaigns. Surveys, installs &amp; CPA offers. High eCPM payouts.</p></div>
         <button class="btn btn-secondary" onclick="CC.startMyleadModal()">Open MyLead</button>
+      </div>
+      <div class="earn-box">
+        <div><h3>Daily Reward</h3><p>Claim +500 points every 24 hours. Small but consistent.</p></div>
+        <button class="btn btn-secondary" id="dailyBtn" onclick="CC.claimDaily()">Claim Daily</button>
+      </div>
+      <div class="earn-box">
+        <div><h3>20-Q Trivia</h3><p>Answer 20 general knowledge questions. +1,000 points if you pass.</p></div>
+        <button class="btn btn-secondary" id="triviaBtn" onclick="CC.startTriviaModal()">Start Trivia</button>
+      </div>
+      <div class="earn-box">
+        <div><h3>Coin Frenzy</h3><p>Collect 25 coins while dodging red hazards. +2,000 points on victory.</p></div>
+        <button class="btn btn-secondary" id="frenzyBtn" onclick="CC.startCoinFrenzyModal()">Play Now</button>
       </div>
     </div>
   </section>
@@ -251,7 +261,6 @@ footer p{margin-bottom:5px}
     <p>Extreme Hardcore Economy Active.</p>
   </footer>
 </div>
-<!-- Auth Modal -->
 <div class="modal-overlay" id="authModal">
   <div class="modal">
     <h3 id="authTitle">Welcome to CrownCash</h3>
@@ -274,7 +283,6 @@ footer p{margin-bottom:5px}
     <button class="btn btn-secondary" style="margin-top:10px" onclick="CC.closeAuthModal()">Cancel</button>
   </div>
 </div>
-<!-- Custom Claim Modal -->
 <div class="modal-overlay" id="claimModal">
   <div class="modal">
     <h3>Custom Points Claim</h3>
@@ -289,7 +297,6 @@ footer p{margin-bottom:5px}
     <button class="btn btn-secondary" style="margin-top:10px" onclick="CC.closeCustomClaimModal()">Cancel</button>
   </div>
 </div>
-<!-- Trivia Modal -->
 <div class="modal-overlay" id="triviaModal">
   <div class="modal">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px">
@@ -301,7 +308,6 @@ footer p{margin-bottom:5px}
     <button class="btn btn-secondary" onclick="CC.closeTriviaModal()">Exit Quiz</button>
   </div>
 </div>
-<!-- Pollmatic Modal -->
 <div class="modal-overlay" id="pollmaticModal">
   <div class="modal wide">
     <div class="modal-header">
@@ -314,7 +320,6 @@ footer p{margin-bottom:5px}
     </div>
   </div>
 </div>
-<!-- MyLead Modal -->
 <div class="modal-overlay" id="myleadModal">
   <div class="modal wide">
     <div class="modal-header">
@@ -327,7 +332,6 @@ footer p{margin-bottom:5px}
     </div>
   </div>
 </div>
-<!-- Coin Frenzy Modal -->
 <div class="modal-overlay" id="frenzyModal">
   <div class="modal" style="max-width:440px">
     <h3>Coin Frenzy Minigame</h3>
@@ -364,6 +368,9 @@ var RECAPTCHA_SITE_KEY = '6LcEtoQtAAAAADOg9pRamqx8PlzAVyvonFFhqy2V';
 
 var debugLogs = [];
 var debugEnabled = false;
+var securityBlocked = false;
+var mouseMoves = 0;
+var authAttempts = [];
 
 function debugLog(msg, type){
   type = type || 'info';
@@ -407,6 +414,78 @@ function toggleDebug(){
 function clearDebug(){
   debugLogs = [];
   renderDebug();
+}
+
+function escapeHtml(str){
+  if(!str) return '';
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function showToast(msg, type){
+  type = type || 'info';
+  var toast = document.getElementById('toast');
+  if(!toast) return;
+  toast.textContent = msg;
+  toast.className = 'toast ' + type;
+  setTimeout(function(){ toast.classList.add('show'); }, 10);
+  setTimeout(function(){ toast.classList.remove('show'); }, 3500);
+}
+
+function hideSessionCheck(){
+  var el = document.getElementById('sessionCheck');
+  if(el) el.classList.add('hidden');
+}
+
+function checkAuthRateLimit(){
+  var now = Date.now();
+  authAttempts = authAttempts.filter(function(t){ return now - t < 60000; });
+  if(authAttempts.length >= 5){
+    showToast('Too many attempts. Wait 1 minute.', 'error');
+    return false;
+  }
+  authAttempts.push(now);
+  return true;
+}
+
+function checkCooldowns(){
+  if(!userProfile) return;
+  var now = Date.now();
+  var dailyCd = 24 * 60 * 60 * 1000;
+  var triviaCd = 12 * 60 * 60 * 1000;
+  var frenzyCd = 12 * 60 * 60 * 1000;
+
+  var dailyBtn = document.getElementById('dailyBtn');
+  if(dailyBtn){
+    if(userProfile.last_daily && (now - new Date(userProfile.last_daily).getTime() < dailyCd)){
+      dailyBtn.disabled = true;
+      dailyBtn.textContent = 'Claimed';
+    } else {
+      dailyBtn.disabled = false;
+      dailyBtn.textContent = 'Claim Daily';
+    }
+  }
+
+  var triviaBtn = document.getElementById('triviaBtn');
+  if(triviaBtn){
+    if(userProfile.last_trivia && (now - new Date(userProfile.last_trivia).getTime() < triviaCd)){
+      triviaBtn.disabled = true;
+      triviaBtn.textContent = 'On Cooldown';
+    } else {
+      triviaBtn.disabled = false;
+      triviaBtn.textContent = 'Start Trivia';
+    }
+  }
+
+  var frenzyBtn = document.getElementById('frenzyBtn');
+  if(frenzyBtn){
+    if(userProfile.last_frenzy && (now - new Date(userProfile.last_frenzy).getTime() < frenzyCd)){
+      frenzyBtn.disabled = true;
+      frenzyBtn.textContent = 'On Cooldown';
+    } else {
+      frenzyBtn.disabled = false;
+      frenzyBtn.textContent = 'Play Now';
+    }
+  }
 }
 
 var origLog = console.log;
@@ -460,7 +539,7 @@ var triviaQuestions = [
   {q:"Which country gifted the Statue of Liberty to the USA?",opts:["United Kingdom","France","Spain","Italy"],a:1},
   {q:"What is the main component of the sun?",opts:["Liquid magma","Hydrogen and Helium","Solid iron","Carbon dioxide"],a:1},
   {q:"Which protocol is securely used for encrypted web traffic?",opts:["HTTP","FTP","HTTPS","SMTP"],a:2},
-  {q:"What is the boiling point of water in Celsius?",opts:["90\u00B0C","100\u00B0C","110\u00B0C","120\u00B0C"],a:1}
+  {q:"What is the boiling point of water in Celsius?",opts:["90°C","100°C","110°C","120°C"],a:1}
 ];
 var currentTriviaIdx = 0;
 var triviaScoreCount = 0;
@@ -468,11 +547,6 @@ var triviaScoreCount = 0;
 var frenzyRunning = false, frenzyAnimId = null, frenzyCtx = null;
 var playerX = 190, playerY = 120, coinsCollected = 0;
 var gameObjects = [], keys = {};
-
-/* =============================================================
-   SECURITY - BULLETPROOF
-   ============================================================= */
-var SECURITY_PASSED = false;
 
 async function runSecurityCheck(){
   try {
@@ -487,17 +561,19 @@ async function runSecurityCheck(){
     var data = await res.json();
     console.log('Security check:', data);
 
-    if(data.allowed === false){
-      document.body.innerHTML = '<div style="position:fixed;top:0;left:0;width:100%;height:100%;background:#0d0418;display:flex;align-items:center;justify-content:center;flex-direction:column;z-index:99999;color:#f5e6c8;font-family:sans-serif;text-align:center;padding:40px"><svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#e74c3c" stroke-width="1.5" style="margin-bottom:20px"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg><h1 style="color:#e74c3c;font-family:Cinzel,serif;margin-bottom:15px">Access Denied</h1><p style="color:#c9b896;max-width:400px;line-height:1.6">' + (data.reason || 'VPN/Proxy/Datacenter detected') + '. Please disable your VPN to access CrownCash.</p></div>';
+    if(data.allowed === false && data.reason){
+      securityBlocked = true;
+      var overlay = document.getElementById('securityBlock');
+      var reasonEl = document.getElementById('securityReason');
+      if(overlay) overlay.style.display = 'flex';
+      if(reasonEl) reasonEl.textContent = data.reason;
       document.body.style.overflow = 'hidden';
       return false;
     }
 
-    SECURITY_PASSED = true;
     return true;
   } catch(e) {
     console.log('Security check timeout/error (allowing):', e);
-    SECURITY_PASSED = true;
     return true;
   }
 }
@@ -550,6 +626,39 @@ function initSupabase(){
     showToast('Failed to connect to server.', 'error');
     updateAuthUI(); hideSessionCheck();
   }
+}
+
+function updateAuthUI(){
+  var navState = document.getElementById('navAuthState');
+  var earnWall = document.getElementById('earnAuthWall');
+  var earnGrid = document.getElementById('earnGrid');
+  var rewardsWall = document.getElementById('rewardsAuthWall');
+  var rewardsGrid = document.getElementById('rewardsGrid');
+  var customWrap = document.getElementById('customClaimWrap');
+  var lbWall = document.getElementById('leaderboardAuthWall');
+  var lbContent = document.getElementById('leaderboardContent');
+
+  if(currentUser && userProfile){
+    if(navState) navState.innerHTML = '<span class="pts">' + userProfile.points.toLocaleString() + ' pts</span> <span style="color:var(--cream-dim)">' + escapeHtml(userProfile.username) + '</span> <button class="btn btn-secondary btn-sm" onclick="CC.handleLogout()">Logout</button>';
+    if(earnWall) earnWall.classList.add('hidden');
+    if(earnGrid) earnGrid.classList.remove('hidden');
+    if(rewardsWall) rewardsWall.classList.add('hidden');
+    if(rewardsGrid) rewardsGrid.classList.remove('hidden');
+    if(customWrap) customWrap.classList.remove('hidden');
+    if(lbWall) lbWall.classList.add('hidden');
+    if(lbContent) lbContent.classList.remove('hidden');
+    checkCooldowns();
+  } else {
+    if(navState) navState.innerHTML = '<button class="btn btn-primary btn-sm" onclick="CC.openAuthModal()">Sign In</button>';
+    if(earnWall) earnWall.classList.remove('hidden');
+    if(earnGrid) earnGrid.classList.add('hidden');
+    if(rewardsWall) rewardsWall.classList.remove('hidden');
+    if(rewardsGrid) rewardsGrid.classList.add('hidden');
+    if(customWrap) customWrap.classList.add('hidden');
+    if(lbWall) lbWall.classList.remove('hidden');
+    if(lbContent) lbContent.classList.add('hidden');
+  }
+  updateDebugStatus();
 }
 
 async function loadUserProfile(userId){
@@ -646,7 +755,6 @@ async function handleRegister(){
   debugLog('Registering: ' + email, 'auth');
 
   try {
-    // reCAPTCHA
     var recaptchaToken = '';
     try {
       if(typeof grecaptcha !== 'undefined' && grecaptcha.execute){
@@ -1124,11 +1232,11 @@ window.CC = {
 };
 
 document.addEventListener('DOMContentLoaded', async function(){
+  document.addEventListener('mousemove', function(){ mouseMoves++; });
   var passed = await runSecurityCheck();
   if(!passed) return;
   createParticles();
   initSupabase();
-  // NUCLEAR FALLBACK: if anything hangs, force show the site after 5 seconds
   setTimeout(function(){
     hideSessionCheck();
   }, 5000);
