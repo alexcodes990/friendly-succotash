@@ -561,33 +561,6 @@ function showSecurityBlock(reason){
   if(container) container.style.display = 'none';
 }
 
-// Client-side WebRTC leak detection
-function checkWebRTCLeak(){
-  return new Promise(function(resolve){
-    try {
-      var RTCPeerConnection = window.RTCPeerConnection || window.mozRTCPeerConnection || window.webkitRTCPeerConnection;
-      if(!RTCPeerConnection) { resolve(false); return; }
-
-      var pc = new RTCPeerConnection({iceServers: []});
-      pc.createDataChannel('');
-      pc.createOffer().then(function(offer){ pc.setLocalDescription(offer); });
-
-      pc.onicecandidate = function(ice){
-        if(!ice || !ice.candidate || !ice.candidate.candidate) { resolve(false); return; }
-        var ipMatch = ice.candidate.candidate.match(/([0-9]{1,3}\.){3}[0-9]{1,3}/);
-        if(ipMatch){
-          var localIP = ipMatch[0];
-          // If WebRTC leaks a local IP that's not a standard private range, it might be a VPN
-          // More importantly, if we get ANY candidate, the user might be on a VPN that leaks
-          console.log('WebRTC candidate IP:', localIP);
-        }
-        resolve(false); // WebRTC check alone isn't definitive, use as signal
-      };
-      setTimeout(function(){ resolve(false); }, 1000);
-    } catch(e) { resolve(false); }
-  });
-}
-
 async function runSecurityCheck(){
   try {
     console.log('=== SECURITY CHECK START ===');
@@ -1284,8 +1257,7 @@ document.addEventListener('DOMContentLoaded', async function(){
   createParticles();
   initSupabase();
 
-  // Run security check in background - if it blocks, it'll show overlay
-  // If it fails, page still works
+  // Run security check in background
   runSecurityCheck();
 
   // Nuclear fallback: hide spinner after 4 seconds no matter what
