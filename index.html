@@ -476,12 +476,18 @@ var SECURITY_PASSED = false;
 
 async function runSecurityCheck(){
   try {
-    var res = await fetch(SUPABASE_URL + '/functions/v1/check-security');
+    var controller = new AbortController();
+    var timeoutId = setTimeout(function(){ controller.abort(); }, 3000);
+
+    var res = await fetch(SUPABASE_URL + '/functions/v1/check-security', {
+      signal: controller.signal
+    });
+    clearTimeout(timeoutId);
+
     var data = await res.json();
     console.log('Security check:', data);
 
     if(data.allowed === false){
-      // NUCLEAR BLOCK - replace entire page
       document.body.innerHTML = '<div style="position:fixed;top:0;left:0;width:100%;height:100%;background:#0d0418;display:flex;align-items:center;justify-content:center;flex-direction:column;z-index:99999;color:#f5e6c8;font-family:sans-serif;text-align:center;padding:40px"><svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#e74c3c" stroke-width="1.5" style="margin-bottom:20px"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg><h1 style="color:#e74c3c;font-family:Cinzel,serif;margin-bottom:15px">Access Denied</h1><p style="color:#c9b896;max-width:400px;line-height:1.6">' + (data.reason || 'VPN/Proxy/Datacenter detected') + '. Please disable your VPN to access CrownCash.</p></div>';
       document.body.style.overflow = 'hidden';
       return false;
@@ -490,7 +496,7 @@ async function runSecurityCheck(){
     SECURITY_PASSED = true;
     return true;
   } catch(e) {
-    console.log('Security check error (allowing):', e);
+    console.log('Security check timeout/error (allowing):', e);
     SECURITY_PASSED = true;
     return true;
   }
@@ -1119,9 +1125,13 @@ window.CC = {
 
 document.addEventListener('DOMContentLoaded', async function(){
   var passed = await runSecurityCheck();
-  if(!passed) return; // STOP everything if blocked
+  if(!passed) return;
   createParticles();
   initSupabase();
+  // NUCLEAR FALLBACK: if anything hangs, force show the site after 5 seconds
+  setTimeout(function(){
+    hideSessionCheck();
+  }, 5000);
 });
 
 })();
