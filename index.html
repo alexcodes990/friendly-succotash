@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>CrownCash - Royal Rewards & Cash Payouts</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="https://www.google.com/recaptcha/api.js?render=6LcEtoQtAAAAADOg9pRamqx8PlzAVyvonFFhqy2V"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;scroll-behavior:smooth}
@@ -128,6 +129,14 @@ footer p{margin-bottom:5px}
 <base target="_blank">
 </head>
 <body>
+<!-- VPN / Security Block Overlay -->
+<div id="securityBlock" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:#0d0418;z-index:9999;align-items:center;justify-content:center;flex-direction:column;text-align:center;padding:40px">
+  <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#e74c3c" stroke-width="1.5" style="margin-bottom:20px"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+  <h2 style="font-family:Cinzel,serif;color:#e74c3c;font-size:1.8rem;margin-bottom:15px">Access Denied</h2>
+  <p id="securityReason" style="color:var(--cream-dim);max-width:500px;line-height:1.7;margin-bottom:25px">Suspicious activity detected.</p>
+  <p style="color:var(--cream-dim);font-size:.8rem;opacity:.6">If you believe this is an error, contact support.</p>
+</div>
+
 <div class="session-check" id="sessionCheck"><div class="spinner"></div><p>Checking session...</p></div>
 <div class="particles" id="particles"></div>
 <nav class="navbar">
@@ -351,6 +360,7 @@ var SUPABASE_ANON_KEY = 'sb_publishable_RdOlBBkKe46G0Jk5fR1x0Q__PZHxoDW';
 var CONVERSION_RATE = 500000;
 var POLLMATIC_API_KEY = '9du7nzxaxxbkjz5mmy41h2houenra5';
 var MYLEAD_OFFERWALL_ID = 'a8264656-95d9-11f1-9656-8a5fb7be40ea';
+var RECAPTCHA_SITE_KEY = '6LcEtoQtAAAAADOg9pRamqx8PlzAVyvonFFhqy2V';
 
 var debugLogs = [];
 var debugEnabled = false;
@@ -458,6 +468,86 @@ var triviaScoreCount = 0;
 var frenzyRunning = false, frenzyAnimId = null, frenzyCtx = null;
 var playerX = 190, playerY = 120, coinsCollected = 0;
 var gameObjects = [], keys = {};
+
+/* =============================================================
+   SECURITY
+   ============================================================= */
+var securityBlocked = false;
+var mouseMoves = 0;
+var lastClickTime = 0;
+var clickCount = 0;
+var authAttempts = 0;
+var lastAuthTime = 0;
+
+function blockSecurity(reason){
+  if(securityBlocked) return;
+  securityBlocked = true;
+  var overlay = document.getElementById('securityBlock');
+  var reasonEl = document.getElementById('securityReason');
+  if(overlay) overlay.style.display = 'flex';
+  if(reasonEl) reasonEl.textContent = reason;
+  supabaseClient = null; currentUser = null; userProfile = null;
+  debugLog('SECURITY BLOCK: ' + reason, 'error');
+}
+
+document.addEventListener('mousemove', function(){ mouseMoves++; });
+
+document.addEventListener('click', function(){
+  clickCount++;
+  var now = Date.now();
+  if(now - lastClickTime < 100){
+    blockSecurity('Suspicious clicking pattern detected. Automated tools are not allowed.');
+  }
+  lastClickTime = now;
+});
+
+async function checkVPN(){
+  try{
+    debugLog('Checking IP security via Edge Function...', 'info');
+    var res = await fetch(SUPABASE_URL + '/functions/v1/check-security');
+    var data = await res.json();
+    debugLog('Security check: ' + (data.allowed ? 'PASSED' : 'BLOCKED') + ' | IP: ' + (data.ip || '?') + ' | ' + (data.country || ''), data.allowed ? 'success' : 'error');
+    // Only block if explicitly disallowed AND we have a clear reason
+    if(data.allowed === false && data.reason){
+      blockSecurity(data.reason + '. Please disable VPN/Proxy to access CrownCash.');
+    }
+    // If allowed is false but no reason given, just log it (don't block)
+    else if(data.allowed === false){
+      debugLog('Security check returned blocked but no reason given - allowing access', 'warn');
+    }
+  }catch(err){
+    debugLog('Security check failed (allowing): ' + err.message, 'warn');
+  }
+}
+
+function checkAuthRateLimit(){
+  var now = Date.now();
+  if(now - lastAuthTime > 60000) authAttempts = 0;
+  authAttempts++; lastAuthTime = now;
+  if(authAttempts > 5){
+    blockSecurity('Too many authentication attempts. Please wait 1 minute.');
+    return false;
+  }
+  return true;
+}
+
+// DevTools detection
+var devtoolsOpen = false;
+setInterval(function(){
+  if(window.outerWidth - window.innerWidth > 160 || window.outerHeight - window.innerHeight > 160){
+    if(!devtoolsOpen){
+      devtoolsOpen = true;
+      debugLog('DevTools detected', 'warn');
+    }
+  }else{
+    devtoolsOpen = false;
+  }
+}, 500);
+
+// Prevent right-click on game canvas
+document.addEventListener('contextmenu', function(e){
+  if(e.target && e.target.id === 'frenzyCanvas') e.preventDefault();
+});
 
 function hideSessionCheck(){
   var el = document.getElementById('sessionCheck');
@@ -611,7 +701,7 @@ async function loadUserProfile(userId){
         }
       } else {
         userProfile = insertRes.data[0];
-        debugLog('Profile created: ' + username + ' | 5000 pts', 'success');
+        debugLog('Profile created: ' + username + ' | 0 pts', 'success');
       }
     } else if(res.error){
       debugLog('Profile load error: ' + res.error.message, 'error');
@@ -653,6 +743,10 @@ async function updateProfileField(field, value){
 }
 
 async function handleRegister(){
+  if(securityBlocked) return;
+  if(!checkAuthRateLimit()) return;
+  if(mouseMoves < 10){ showToast('Please interact with the page normally.', 'error'); return; }
+
   var username = document.getElementById('regUsername').value.trim();
   var email = document.getElementById('regEmail').value.trim().toLowerCase();
   var password = document.getElementById('regPassword').value;
@@ -666,6 +760,15 @@ async function handleRegister(){
   debugLog('Registering: ' + email, 'auth');
 
   try {
+    // reCAPTCHA
+    var recaptchaToken = '';
+    try {
+      if(typeof grecaptcha !== 'undefined' && grecaptcha.execute){
+        recaptchaToken = await grecaptcha.execute(RECAPTCHA_SITE_KEY, {action: 'register'});
+        debugLog('reCAPTCHA token received', 'info');
+      }
+    } catch(e){ debugLog('reCAPTCHA skipped: ' + e.message, 'warn'); }
+
     var res = await supabaseClient.auth.signUp({email: email, password: password, options: {data: {username: username}}});
 
     if(res.data && res.data.session){
@@ -744,6 +847,10 @@ async function handleRegister(){
 }
 
 async function handleLogin(){
+  if(securityBlocked) return;
+  if(!checkAuthRateLimit()) return;
+  if(mouseMoves < 10){ showToast('Please interact with the page normally.', 'error'); return; }
+
   var email = document.getElementById('loginEmail').value.trim().toLowerCase();
   var password = document.getElementById('loginPassword').value;
   var btn = document.getElementById('loginBtn');
@@ -880,11 +987,6 @@ function closePollmaticModal(){
 
 function startMyleadModal(){
   if(!currentUser || !userProfile){ showToast('Please sign in first.', 'error'); return; }
-  if(MYLEAD_OFFERWALL_ID.indexOf('YOUR_') === 0){
-    showToast('MyLead OfferWall ID not configured yet.', 'error');
-    debugLog('MyLead ID not set', 'warn');
-    return;
-  }
   var uid = userProfile.id;
   document.getElementById('myleadUserIdDisplay').textContent = uid;
   var iframe = document.getElementById('myleadIframe');
@@ -1137,6 +1239,7 @@ window.CC = {
 
 document.addEventListener('DOMContentLoaded', function(){
   createParticles();
+  checkVPN();
   initSupabase();
 });
 
