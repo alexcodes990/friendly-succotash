@@ -470,149 +470,29 @@ var playerX = 190, playerY = 120, coinsCollected = 0;
 var gameObjects = [], keys = {};
 
 /* =============================================================
-   SECURITY
+   SECURITY - BULLETPROOF
    ============================================================= */
-var securityBlocked = false;
-var mouseMoves = 0;
-var lastClickTime = 0;
-var clickCount = 0;
-var authAttempts = 0;
-var lastAuthTime = 0;
+var SECURITY_PASSED = false;
 
-function blockSecurity(reason){
-  if(securityBlocked) return;
-  securityBlocked = true;
-  var overlay = document.getElementById('securityBlock');
-  var reasonEl = document.getElementById('securityReason');
-  if(overlay) overlay.style.display = 'flex';
-  if(reasonEl) reasonEl.textContent = reason;
-  supabaseClient = null; currentUser = null; userProfile = null;
-  debugLog('SECURITY BLOCK: ' + reason, 'error');
-}
-
-document.addEventListener('mousemove', function(){ mouseMoves++; });
-
-document.addEventListener('click', function(){
-  clickCount++;
-  var now = Date.now();
-  if(now - lastClickTime < 100){
-    blockSecurity('Suspicious clicking pattern detected. Automated tools are not allowed.');
-  }
-  lastClickTime = now;
-});
-
-async function checkVPN(){
-  try{
-    debugLog('Checking IP security via Edge Function...', 'info');
+async function runSecurityCheck(){
+  try {
     var res = await fetch(SUPABASE_URL + '/functions/v1/check-security');
     var data = await res.json();
-    debugLog('Security check: ' + (data.allowed ? 'PASSED' : 'BLOCKED') + ' | IP: ' + (data.ip || '?') + ' | ' + (data.country || ''), data.allowed ? 'success' : 'error');
-    // Only block if explicitly disallowed AND we have a clear reason
-    if(data.allowed === false && data.reason){
-      blockSecurity(data.reason + '. Please disable VPN/Proxy to access CrownCash.');
+    console.log('Security check:', data);
+
+    if(data.allowed === false){
+      // NUCLEAR BLOCK - replace entire page
+      document.body.innerHTML = '<div style="position:fixed;top:0;left:0;width:100%;height:100%;background:#0d0418;display:flex;align-items:center;justify-content:center;flex-direction:column;z-index:99999;color:#f5e6c8;font-family:sans-serif;text-align:center;padding:40px"><svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#e74c3c" stroke-width="1.5" style="margin-bottom:20px"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg><h1 style="color:#e74c3c;font-family:Cinzel,serif;margin-bottom:15px">Access Denied</h1><p style="color:#c9b896;max-width:400px;line-height:1.6">' + (data.reason || 'VPN/Proxy/Datacenter detected') + '. Please disable your VPN to access CrownCash.</p></div>';
+      document.body.style.overflow = 'hidden';
+      return false;
     }
-    // If allowed is false but no reason given, just log it (don't block)
-    else if(data.allowed === false){
-      debugLog('Security check returned blocked but no reason given - allowing access', 'warn');
-    }
-  }catch(err){
-    debugLog('Security check failed (allowing): ' + err.message, 'warn');
-  }
-}
 
-function checkAuthRateLimit(){
-  var now = Date.now();
-  if(now - lastAuthTime > 60000) authAttempts = 0;
-  authAttempts++; lastAuthTime = now;
-  if(authAttempts > 5){
-    blockSecurity('Too many authentication attempts. Please wait 1 minute.');
-    return false;
-  }
-  return true;
-}
-
-// DevTools detection
-var devtoolsOpen = false;
-setInterval(function(){
-  if(window.outerWidth - window.innerWidth > 160 || window.outerHeight - window.innerHeight > 160){
-    if(!devtoolsOpen){
-      devtoolsOpen = true;
-      debugLog('DevTools detected', 'warn');
-    }
-  }else{
-    devtoolsOpen = false;
-  }
-}, 500);
-
-// Prevent right-click on game canvas
-document.addEventListener('contextmenu', function(e){
-  if(e.target && e.target.id === 'frenzyCanvas') e.preventDefault();
-});
-
-function hideSessionCheck(){
-  var el = document.getElementById('sessionCheck');
-  if(el){ el.classList.add('hidden'); setTimeout(function(){el.style.display='none'},500); }
-}
-
-function showToast(msg, type){
-  var toast = document.getElementById('toast');
-  if(!toast) return;
-  toast.textContent = msg;
-  toast.className = 'toast ' + (type || '');
-  setTimeout(function(){toast.classList.add('show');},10);
-  setTimeout(function(){toast.classList.remove('show');},4000);
-}
-
-function escapeHtml(text){
-  var div = document.createElement('div');
-  div.textContent = text;
-  return div.innerHTML;
-}
-
-function updateAuthUI(){
-  var navState = document.getElementById('navAuthState');
-  var earnWall = document.getElementById('earnAuthWall');
-  var earnGrid = document.getElementById('earnGrid');
-  var rewardsWall = document.getElementById('rewardsAuthWall');
-  var rewardsGrid = document.getElementById('rewardsGrid');
-  var claimWrap = document.getElementById('customClaimWrap');
-  var lbWall = document.getElementById('leaderboardAuthWall');
-  var lbContent = document.getElementById('leaderboardContent');
-
-  if(currentUser && userProfile){
-    var usd = (userProfile.points / CONVERSION_RATE).toFixed(2);
-    navState.innerHTML = '<div style="display:flex;align-items:center;gap:12px"><div><span class="pts">' + userProfile.points.toLocaleString() + '</span> pts <span style="color:var(--cream-dim);font-size:.8rem">($' + usd + ')</span></div><button class="btn btn-primary btn-sm" onclick="CC.openCustomClaimModal()">Claim Cash</button><button class="btn btn-secondary btn-sm" onclick="CC.handleLogout()">Logout</button></div>';
-    earnWall.classList.add('hidden'); earnGrid.classList.remove('hidden');
-    rewardsWall.classList.add('hidden'); rewardsGrid.classList.remove('hidden');
-    claimWrap.classList.remove('hidden');
-    lbWall.classList.add('hidden'); lbContent.classList.remove('hidden');
-    checkCooldowns();
-  } else {
-    navState.innerHTML = '<button class="btn btn-primary btn-sm" onclick="CC.openAuthModal()">Sign In</button>';
-    earnWall.classList.remove('hidden'); earnGrid.classList.add('hidden');
-    rewardsWall.classList.remove('hidden'); rewardsGrid.classList.add('hidden');
-    claimWrap.classList.add('hidden');
-    lbWall.classList.remove('hidden'); lbContent.classList.add('hidden');
-  }
-  updateDebugStatus();
-}
-
-function checkCooldowns(){
-  if(!userProfile) return;
-  var btn = document.getElementById('dailyClaimBtn');
-  if(!btn) return;
-  if(userProfile.last_daily){
-    var diff = Date.now() - new Date(userProfile.last_daily).getTime();
-    var cooldown = 24 * 60 * 60 * 1000;
-    if(diff < cooldown){
-      var hrsLeft = Math.ceil((cooldown - diff) / (1000 * 60 * 60));
-      btn.textContent = 'Claimed (' + hrsLeft + 'h left)';
-      btn.disabled = true; btn.style.opacity = '.5';
-    } else {
-      btn.textContent = 'Claim Daily'; btn.disabled = false; btn.style.opacity = '1';
-    }
-  } else {
-    btn.textContent = 'Claim Daily'; btn.disabled = false; btn.style.opacity = '1';
+    SECURITY_PASSED = true;
+    return true;
+  } catch(e) {
+    console.log('Security check error (allowing):', e);
+    SECURITY_PASSED = true;
+    return true;
   }
 }
 
@@ -1237,9 +1117,10 @@ window.CC = {
   clearDebug: clearDebug
 };
 
-document.addEventListener('DOMContentLoaded', function(){
+document.addEventListener('DOMContentLoaded', async function(){
+  var passed = await runSecurityCheck();
+  if(!passed) return; // STOP everything if blocked
   createParticles();
-  checkVPN();
   initSupabase();
 });
 
