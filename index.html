@@ -558,6 +558,12 @@ async function runSecurityCheck(){
     });
     clearTimeout(timeoutId);
 
+    // If we got a non-200 response, allow through
+    if(!res.ok){
+      console.log('Security check returned status ' + res.status + ', allowing');
+      return true;
+    }
+
     var data = await res.json();
     console.log('Security check:', data);
 
@@ -568,6 +574,11 @@ async function runSecurityCheck(){
       if(overlay) overlay.style.display = 'flex';
       if(reasonEl) reasonEl.textContent = data.reason;
       document.body.style.overflow = 'hidden';
+      // Hide the main content
+      var navbar = document.querySelector('.navbar');
+      var container = document.querySelector('.container');
+      if(navbar) navbar.style.display = 'none';
+      if(container) container.style.display = 'none';
       return false;
     }
 
@@ -1233,13 +1244,19 @@ window.CC = {
 
 document.addEventListener('DOMContentLoaded', async function(){
   document.addEventListener('mousemove', function(){ mouseMoves++; });
-  var passed = await runSecurityCheck();
-  if(!passed) return;
+
+  // Start security check AND page init at the same time (non-blocking)
   createParticles();
   initSupabase();
+
+  // Run security check in background - if it blocks, it'll show overlay
+  // If it fails, page still works
+  runSecurityCheck();
+
+  // Nuclear fallback: hide spinner after 4 seconds no matter what
   setTimeout(function(){
     hideSessionCheck();
-  }, 5000);
+  }, 4000);
 });
 
 })();
