@@ -126,6 +126,7 @@ footer p{margin-bottom:5px}
 .debug-status .dot.ok{background:var(--emerald)}
 </style>
 <base target="_blank">
+<base target="_blank">
 </head>
 <body>
 <div id="securityBlock" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:#0d0418;z-index:9999;align-items:center;justify-content:center;flex-direction:column;text-align:center;padding:40px">
@@ -371,6 +372,7 @@ var debugEnabled = false;
 var securityBlocked = false;
 var mouseMoves = 0;
 var authAttempts = [];
+var securityCheckComplete = false;
 
 function debugLog(msg, type){
   type = type || 'info';
@@ -432,6 +434,7 @@ function showToast(msg, type){
 }
 
 function hideSessionCheck(){
+  if(!securityCheckComplete) return;
   var el = document.getElementById('sessionCheck');
   if(el) el.classList.add('hidden');
 }
@@ -552,6 +555,7 @@ function showSecurityBlock(reason){
   securityBlocked = true;
   var overlay = document.getElementById('securityBlock');
   var reasonEl = document.getElementById('securityReason');
+  var sessionCheck = document.getElementById('sessionCheck');
   if(overlay) overlay.style.display = 'flex';
   if(reasonEl) reasonEl.textContent = reason;
   document.body.style.overflow = 'hidden';
@@ -559,6 +563,7 @@ function showSecurityBlock(reason){
   var container = document.querySelector('.container');
   if(navbar) navbar.style.display = 'none';
   if(container) container.style.display = 'none';
+  if(sessionCheck) sessionCheck.classList.add('hidden');
 }
 
 async function runSecurityCheck(){
@@ -1252,18 +1257,25 @@ window.CC = {
 
 document.addEventListener('DOMContentLoaded', async function(){
   document.addEventListener('mousemove', function(){ mouseMoves++; });
-
-  // Start security check AND page init at the same time (non-blocking)
   createParticles();
   initSupabase();
 
-  // Run security check in background
-  runSecurityCheck();
+  // Nuclear fallback: force page reveal after 6 seconds if security check hangs
+  var fallbackTimer = setTimeout(function(){
+    if(!securityCheckComplete){
+      securityCheckComplete = true;
+      if(!securityBlocked) hideSessionCheck();
+    }
+  }, 6000);
 
-  // Nuclear fallback: hide spinner after 4 seconds no matter what
-  setTimeout(function(){
-    hideSessionCheck();
-  }, 4000);
+  // Wait for security check before revealing page
+  await runSecurityCheck();
+
+  if(!securityCheckComplete){
+    securityCheckComplete = true;
+    clearTimeout(fallbackTimer);
+    if(!securityBlocked) hideSessionCheck();
+  }
 });
 
 })();
