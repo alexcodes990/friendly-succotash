@@ -4,6 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>CrownCash - Royal Rewards & Cash Payouts</title>
+<meta name="theme-color" content="#1a0a2e">
+<meta name="description" content="Earn points and redeem for real cash rewards.">
+<link rel="manifest" href="data:application/json;base64,eyJuYW1lIjoiQ3Jvd25DYXNoIiwic2hvcnRfbmFtZSI6IkNyb3duQ2FzaCIsInN0YXJ0X3VybCI6Ii4iLCJkaXNwbGF5Ijoic3RhbmRhbG9uZSIsImJhY2tncm91bmRfY29sb3IiOiIjMGQwNDE4IiwidGhlbWVfY29sb3IiOiIjMWEwYTJlIn0=">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="https://www.google.com/recaptcha/api.js?render=6LcEtoQtAAAAADOg9pRamqx8PlzAVyvonFFhqy2V"></script>
 <style>
@@ -12,7 +15,7 @@
 :root{
   --gold:#d4af37;--gold-light:#f4d03f;--gold-dark:#b8860b;--gold-glow:rgba(212,175,55,0.3);
   --royal-purple:#1a0a2e;--royal-deep:#0d0418;--cream:#f5e6c8;--cream-dim:#c9b896;
-  --emerald:#2ecc71;--emerald-dark:#27ae60;--red:#e74c3c;--debug-bg:#0a0a12;
+  --emerald:#2ecc71;--emerald-dark:#27ae60;--red:#e74c3c;--amber:#f39c12;--debug-bg:#0a0a12;
 }
 body{font-family:'Inter',sans-serif;background:var(--royal-deep);color:var(--cream);min-height:100vh;overflow-x:hidden}
 .particles{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:0;overflow:hidden}
@@ -25,6 +28,10 @@ body{font-family:'Inter',sans-serif;background:var(--royal-deep);color:var(--cre
 .nav-links a:hover{color:var(--gold)}
 .nav-user-info{display:flex;align-items:center;gap:15px;background:rgba(212,175,55,.08);border:1px solid rgba(212,175,55,.2);padding:8px 16px;border-radius:50px;font-size:.9rem}
 .nav-user-info .pts{color:var(--gold-light);font-weight:700;font-family:'Cinzel',serif}
+.streak-badge{background:linear-gradient(135deg,var(--amber),#e67e22);color:#fff;font-size:.7rem;font-weight:700;padding:3px 10px;border-radius:20px;margin-left:6px;white-space:nowrap}
+.notification-bell{position:relative;cursor:pointer;padding:6px;border-radius:8px;transition:background .2s}
+.notification-bell:hover{background:rgba(212,175,55,.1)}
+.notification-bell .count{position:absolute;top:-2px;right:-2px;background:var(--red);color:#fff;font-size:.6rem;font-weight:700;width:16px;height:16px;border-radius:50%;display:flex;align-items:center;justify-content:center}
 .crown-divider{display:flex;align-items:center;justify-content:center;gap:20px;margin:30px 0}
 .crown-divider::before,.crown-divider::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent)}
 .container{position:relative;z-index:1;max-width:1000px;margin:0 auto;padding:40px 20px}
@@ -66,6 +73,10 @@ body{font-family:'Inter',sans-serif;background:var(--royal-deep);color:var(--cre
 .btn-secondary{background:rgba(212,175,55,.06);color:var(--cream);border:1px solid rgba(212,175,55,.2)}
 .btn-secondary:hover{background:rgba(212,175,55,.12);border-color:rgba(212,175,55,.4)}
 .btn-sm{padding:10px 16px;font-size:.8rem;width:auto}
+.btn-danger{background:linear-gradient(135deg,#e74c3c,#c0392b);color:#fff}
+.btn-danger:hover{transform:translateY(-2px);box-shadow:0 6px 25px rgba(231,76,60,.4)}
+.btn-success{background:linear-gradient(135deg,var(--emerald),var(--emerald-dark));color:#fff}
+.btn-success:hover{transform:translateY(-2px);box-shadow:0 6px 25px rgba(46,204,113,.4)}
 .modal-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(5,2,10,.9);backdrop-filter:blur(8px);display:none;align-items:center;justify-content:center;z-index:100;padding:20px}
 .modal-overlay.active{display:flex}
 .modal{background:linear-gradient(145deg,rgba(26,10,46,.98),rgba(13,4,24,.99));border:1px solid rgba(212,175,55,.2);border-radius:20px;padding:35px;max-width:520px;width:100%;text-align:center;position:relative;animation:slideUp .4s ease}
@@ -124,12 +135,43 @@ footer p{margin-bottom:5px}
 .debug-status span{display:flex;align-items:center;gap:5px}
 .debug-status .dot{width:6px;height:6px;border-radius:50%;background:var(--red)}
 .debug-status .dot.ok{background:var(--emerald)}
+.wheel-container{position:relative;width:280px;height:280px;margin:0 auto 20px}
+.wheel-canvas{width:280px;height:280px;border-radius:50%;border:4px solid var(--gold);box-shadow:0 0 30px rgba(212,175,55,.2)}
+.wheel-pointer{position:absolute;top:-10px;left:50%;transform:translateX(-50%);width:0;height:0;border-left:12px solid transparent;border-right:12px solid transparent;border-top:20px solid var(--gold);z-index:10;filter:drop-shadow(0 2px 4px rgba(0,0,0,.5))}
+.wheel-result{font-family:'Cinzel',serif;font-size:1.6rem;color:var(--gold-light);margin-top:10px;min-height:40px}
+.claims-table{width:100%;border-collapse:collapse;margin-top:15px;font-size:.85rem}
+.claims-table th,.claims-table td{padding:10px 12px;text-align:left;border-bottom:1px solid rgba(212,175,55,.1)}
+.claims-table th{color:var(--gold);font-size:.75rem;text-transform:uppercase;letter-spacing:1px}
+.claims-table .status-pending{color:var(--amber)}
+.claims-table .status-approved{color:var(--emerald)}
+.claims-table .status-denied{color:var(--red)}
+.claims-table .status-paid{color:#3498db}
+.proof-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:15px;margin-top:20px}
+.proof-card{background:rgba(0,0,0,.3);border:1px solid rgba(212,175,55,.15);border-radius:12px;padding:18px;text-align:center}
+.proof-card .proof-amount{font-family:'Cinzel',serif;font-size:1.2rem;color:var(--emerald);font-weight:700}
+.proof-card .proof-user{color:var(--cream-dim);font-size:.8rem;margin-top:6px}
+.proof-card .proof-date{color:var(--cream-dim);font-size:.7rem;opacity:.6;margin-top:4px}
+.ref-link-box{background:rgba(0,0,0,.3);border:1px dashed rgba(212,175,55,.3);border-radius:10px;padding:12px 16px;font-family:'JetBrains Mono',monospace;font-size:.8rem;color:var(--gold-light);word-break:break-all;margin:10px 0;cursor:pointer;transition:all .2s}
+.ref-link-box:hover{background:rgba(212,175,55,.08);border-color:var(--gold)}
+.ref-stats{display:grid;grid-template-columns:1fr 1fr;gap:15px;margin-top:15px}
+.ref-stat{text-align:center;padding:12px;background:rgba(0,0,0,.2);border-radius:10px}
+.ref-stat .num{font-family:'Cinzel',serif;font-size:1.3rem;color:var(--gold-light)}
+.ref-stat .lbl{font-size:.7rem;color:var(--cream-dim);text-transform:uppercase;letter-spacing:1px;margin-top:4px}
+.notif-dropdown{position:absolute;top:45px;right:0;width:320px;max-width:calc(100vw - 40px);background:linear-gradient(145deg,rgba(26,10,46,.98),rgba(13,4,24,.99));border:1px solid rgba(212,175,55,.2);border-radius:12px;z-index:300;display:none;flex-direction:column;max-height:400px;overflow:hidden;box-shadow:0 10px 40px rgba(0,0,0,.7)}
+.notif-dropdown.active{display:flex}
+.notif-header{padding:12px 16px;border-bottom:1px solid rgba(212,175,55,.1);font-family:'Cinzel',serif;font-size:.9rem;color:var(--gold-light)}
+.notif-list{flex:1;overflow-y:auto;padding:8px}
+.notif-item{padding:10px 12px;border-radius:8px;margin-bottom:6px;font-size:.8rem;cursor:pointer;transition:background .2s;border-left:3px solid transparent}
+.notif-item:hover{background:rgba(212,175,55,.06)}
+.notif-item.unread{border-left-color:var(--gold);background:rgba(212,175,55,.04)}
+.notif-item .notif-time{font-size:.65rem;color:var(--cream-dim);opacity:.6;margin-top:4px}
+.notif-empty{padding:20px;text-align:center;color:var(--cream-dim);font-size:.8rem}
+.fraud-banner{background:linear-gradient(90deg,rgba(231,76,60,.15),rgba(231,76,60,.05));border:1px solid rgba(231,76,60,.3);border-radius:10px;padding:12px 16px;margin-bottom:20px;font-size:.85rem;color:#ff9f9f;display:none}
+.fraud-banner.active{display:block}
 </style>
 <base target="_blank">
-<base target="_blank">
 </head>
-<body>
-<div id="securityBlock" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:#0d0418;z-index:9999;align-items:center;justify-content:center;flex-direction:column;text-align:center;padding:40px">
+<body><div id="securityBlock" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:#0d0418;z-index:9999;align-items:center;justify-content:center;flex-direction:column;text-align:center;padding:40px">
   <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#e74c3c" stroke-width="1.5" style="margin-bottom:20px"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
   <h2 style="font-family:Cinzel,serif;color:#e74c3c;font-size:1.8rem;margin-bottom:15px">Access Denied</h2>
   <p id="securityReason" style="color:var(--cream-dim);max-width:500px;line-height:1.7;margin-bottom:25px">Suspicious activity detected.</p>
@@ -146,10 +188,19 @@ footer p{margin-bottom:5px}
   <ul class="nav-links">
     <li><a href="#earn">Earn</a></li>
     <li><a href="#rewards">Rewards</a></li>
+    <li><a href="#proofs">Proofs</a></li>
     <li><a href="#leaderboard">Leaderboard</a></li>
   </ul>
   <div class="nav-user-info" id="navUserInfo">
     <span id="navAuthState"><button class="btn btn-primary btn-sm" onclick="CC.openAuthModal()">Sign In</button></span>
+    <div id="notifBell" class="notification-bell hidden" onclick="CC.toggleNotifs()">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+      <span class="count" id="notifCount" style="display:none">0</span>
+      <div class="notif-dropdown" id="notifDropdown">
+        <div class="notif-header">Notifications</div>
+        <div class="notif-list" id="notifList"><div class="notif-empty">No notifications</div></div>
+      </div>
+    </div>
   </div>
 </nav>
 <div class="container">
@@ -165,7 +216,9 @@ footer p{margin-bottom:5px}
     <div class="stat-pill"><div class="num" id="systemValue">$0.00</div><div class="lbl">Total System Value</div></div>
     <div class="stat-pill"><div class="num">500k : $1</div><div class="lbl">Conversion Rate</div></div>
   </div>
+  <div id="fraudBanner" class="fraud-banner">Multiple accounts detected from this device/IP. Your account has been flagged for review.</div>
   <div class="crown-divider"><span style="color:var(--gold);font-size:1.4rem">&bull;</span></div>
+
   <section id="earn" class="card">
     <h2>Ways to Earn</h2>
     <p>Grind your way up at a strict 500,000 pts / $1.00 USD exchange rate.</p>
@@ -195,8 +248,23 @@ footer p{margin-bottom:5px}
         <div><h3>Coin Frenzy</h3><p>Collect 25 coins while dodging red hazards. +2,000 points on victory.</p></div>
         <button class="btn btn-secondary" id="frenzyBtn" onclick="CC.startCoinFrenzyModal()">Play Now</button>
       </div>
+      <div class="earn-box">
+        <div><h3>Lucky Spin</h3><p>Spin the wheel once per day. Win 100–5,000 points instantly!</p></div>
+        <button class="btn btn-secondary" id="spinBtn" onclick="CC.openSpinModal()">Spin Wheel</button>
+      </div>
+      <div class="earn-box" style="grid-column:1/-1">
+        <div><h3>Refer Friends</h3><p>Share your link and earn 10% of everything your referrals make. Forever.</p></div>
+        <div id="refSection">
+          <div class="ref-link-box" id="refLinkBox" onclick="CC.copyRefLink()" title="Click to copy">Loading referral link...</div>
+          <div class="ref-stats">
+            <div class="ref-stat"><div class="num" id="refCount">0</div><div class="lbl">Referrals</div></div>
+            <div class="ref-stat"><div class="num" id="refEarnings">0</div><div class="lbl">Points Earned</div></div>
+          </div>
+        </div>
+      </div>
     </div>
   </section>
+
   <section id="rewards" class="card">
     <h2>Rewards Store</h2>
     <p>Redeem your hard-earned points for payouts (500,000 pts = $1.00).</p>
@@ -237,8 +305,18 @@ footer p{margin-bottom:5px}
     </div>
     <div id="customClaimWrap" class="hidden" style="margin-top:25px;text-align:center">
       <button class="btn btn-primary" onclick="CC.openCustomClaimModal()">Custom Points Payout Claim</button>
+      <button class="btn btn-secondary" style="margin-top:10px" onclick="CC.openClaimsModal()">My Claim History</button>
     </div>
   </section>
+
+  <section id="proofs" class="card">
+    <h2>Payment Proofs</h2>
+    <p>Real users, real payouts. Recently approved redemptions from the CrownCash community.</p>
+    <div id="proofsGrid" class="proof-grid">
+      <div class="proof-card"><div class="proof-amount">Loading...</div></div>
+    </div>
+  </section>
+
   <section id="leaderboard" class="card">
     <h2>Live Leaderboard</h2>
     <p>Live database records ranked by point balances.</p>
@@ -262,6 +340,7 @@ footer p{margin-bottom:5px}
     <p>Extreme Hardcore Economy Active.</p>
   </footer>
 </div>
+
 <div class="modal-overlay" id="authModal">
   <div class="modal">
     <h3 id="authTitle">Welcome to CrownCash</h3>
@@ -284,6 +363,7 @@ footer p{margin-bottom:5px}
     <button class="btn btn-secondary" style="margin-top:10px" onclick="CC.closeAuthModal()">Cancel</button>
   </div>
 </div>
+
 <div class="modal-overlay" id="claimModal">
   <div class="modal">
     <h3>Custom Points Claim</h3>
@@ -298,6 +378,24 @@ footer p{margin-bottom:5px}
     <button class="btn btn-secondary" style="margin-top:10px" onclick="CC.closeCustomClaimModal()">Cancel</button>
   </div>
 </div>
+
+<div class="modal-overlay" id="claimsHistoryModal">
+  <div class="modal wide">
+    <div class="modal-header">
+      <h3>My Claim History</h3>
+      <button class="btn btn-secondary btn-sm" onclick="CC.closeClaimsModal()">Close</button>
+    </div>
+    <div class="modal-body">
+      <div style="overflow-x:auto">
+        <table class="claims-table">
+          <thead><tr><th>Date</th><th>Item</th><th>Points</th><th>USD</th><th>Status</th></tr></thead>
+          <tbody id="claimsHistoryBody"><tr><td colspan="5" style="text-align:center;color:var(--cream-dim);padding:30px">Loading...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="triviaModal">
   <div class="modal">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px">
@@ -309,6 +407,7 @@ footer p{margin-bottom:5px}
     <button class="btn btn-secondary" onclick="CC.closeTriviaModal()">Exit Quiz</button>
   </div>
 </div>
+
 <div class="modal-overlay" id="pollmaticModal">
   <div class="modal wide">
     <div class="modal-header">
@@ -321,6 +420,7 @@ footer p{margin-bottom:5px}
     </div>
   </div>
 </div>
+
 <div class="modal-overlay" id="myleadModal">
   <div class="modal wide">
     <div class="modal-header">
@@ -333,6 +433,7 @@ footer p{margin-bottom:5px}
     </div>
   </div>
 </div>
+
 <div class="modal-overlay" id="frenzyModal">
   <div class="modal" style="max-width:440px">
     <h3>Coin Frenzy Minigame</h3>
@@ -344,6 +445,21 @@ footer p{margin-bottom:5px}
     <button class="btn btn-secondary" style="margin-top:10px" onclick="CC.closeFrenzyModal()">Close</button>
   </div>
 </div>
+
+<div class="modal-overlay" id="spinModal">
+  <div class="modal">
+    <h3>Lucky Spin Wheel</h3>
+    <p style="font-size:.85rem">Spin once per day for a chance to win up to 5,000 points!</p>
+    <div class="wheel-container">
+      <canvas id="spinCanvas" class="wheel-canvas" width="280" height="280"></canvas>
+      <div class="wheel-pointer"></div>
+    </div>
+    <div class="wheel-result" id="spinResult"></div>
+    <button class="btn btn-primary" id="spinActionBtn" onclick="CC.spinWheel()">Spin Now</button>
+    <button class="btn btn-secondary" style="margin-top:10px" onclick="CC.closeSpinModal()">Close</button>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 <button class="debug-toggle" id="debugToggle" onclick="CC.toggleDebug()" title="Debug Console">DBG</button>
 <div class="debug-panel" id="debugPanel">
@@ -355,8 +471,7 @@ footer p{margin-bottom:5px}
     <span id="debugUser">User: --</span>
     <span id="debugPoints">Pts: --</span>
   </div>
-</div>
-<script>
+</div><script>
 (function(){
 'use strict';
 
@@ -373,6 +488,8 @@ var securityBlocked = false;
 var mouseMoves = 0;
 var authAttempts = [];
 var securityCheckComplete = false;
+var userIP = '';
+var userFingerprint = '';
 
 function debugLog(msg, type){
   type = type || 'info';
@@ -456,38 +573,31 @@ function checkCooldowns(){
   var dailyCd = 24 * 60 * 60 * 1000;
   var triviaCd = 12 * 60 * 60 * 1000;
   var frenzyCd = 12 * 60 * 60 * 1000;
+  var spinCd = 24 * 60 * 60 * 1000;
 
   var dailyBtn = document.getElementById('dailyBtn');
   if(dailyBtn){
     if(userProfile.last_daily && (now - new Date(userProfile.last_daily).getTime() < dailyCd)){
-      dailyBtn.disabled = true;
-      dailyBtn.textContent = 'Claimed';
-    } else {
-      dailyBtn.disabled = false;
-      dailyBtn.textContent = 'Claim Daily';
-    }
+      dailyBtn.disabled = true; dailyBtn.textContent = 'Claimed';
+    } else { dailyBtn.disabled = false; dailyBtn.textContent = 'Claim Daily'; }
   }
-
   var triviaBtn = document.getElementById('triviaBtn');
   if(triviaBtn){
     if(userProfile.last_trivia && (now - new Date(userProfile.last_trivia).getTime() < triviaCd)){
-      triviaBtn.disabled = true;
-      triviaBtn.textContent = 'On Cooldown';
-    } else {
-      triviaBtn.disabled = false;
-      triviaBtn.textContent = 'Start Trivia';
-    }
+      triviaBtn.disabled = true; triviaBtn.textContent = 'On Cooldown';
+    } else { triviaBtn.disabled = false; triviaBtn.textContent = 'Start Trivia'; }
   }
-
   var frenzyBtn = document.getElementById('frenzyBtn');
   if(frenzyBtn){
     if(userProfile.last_frenzy && (now - new Date(userProfile.last_frenzy).getTime() < frenzyCd)){
-      frenzyBtn.disabled = true;
-      frenzyBtn.textContent = 'On Cooldown';
-    } else {
-      frenzyBtn.disabled = false;
-      frenzyBtn.textContent = 'Play Now';
-    }
+      frenzyBtn.disabled = true; frenzyBtn.textContent = 'On Cooldown';
+    } else { frenzyBtn.disabled = false; frenzyBtn.textContent = 'Play Now'; }
+  }
+  var spinBtn = document.getElementById('spinBtn');
+  if(spinBtn){
+    if(userProfile.spin_last_date && (now - new Date(userProfile.spin_last_date).getTime() < spinCd)){
+      spinBtn.disabled = true; spinBtn.textContent = 'Spun Today';
+    } else { spinBtn.disabled = false; spinBtn.textContent = 'Spin Wheel'; }
   }
 }
 
@@ -495,27 +605,10 @@ var origLog = console.log;
 var origWarn = console.warn;
 var origError = console.error;
 var origInfo = console.info;
-
-console.log = function(){
-  var args = Array.prototype.slice.call(arguments);
-  debugLog(args.join(' '), 'info');
-  origLog.apply(console, args);
-};
-console.warn = function(){
-  var args = Array.prototype.slice.call(arguments);
-  debugLog(args.join(' '), 'warn');
-  origWarn.apply(console, args);
-};
-console.error = function(){
-  var args = Array.prototype.slice.call(arguments);
-  debugLog(args.join(' '), 'error');
-  origError.apply(console, args);
-};
-console.info = function(){
-  var args = Array.prototype.slice.call(arguments);
-  debugLog(args.join(' '), 'info');
-  origInfo.apply(console, args);
-};
+console.log = function(){ var args = Array.prototype.slice.call(arguments); debugLog(args.join(' '), 'info'); origLog.apply(console, args); };
+console.warn = function(){ var args = Array.prototype.slice.call(arguments); debugLog(args.join(' '), 'warn'); origWarn.apply(console, args); };
+console.error = function(){ var args = Array.prototype.slice.call(arguments); debugLog(args.join(' '), 'error'); origError.apply(console, args); };
+console.info = function(){ var args = Array.prototype.slice.call(arguments); debugLog(args.join(' '), 'info'); origInfo.apply(console, args); };
 
 var supabaseClient = null;
 var currentUser = null;
@@ -542,14 +635,25 @@ var triviaQuestions = [
   {q:"Which country gifted the Statue of Liberty to the USA?",opts:["United Kingdom","France","Spain","Italy"],a:1},
   {q:"What is the main component of the sun?",opts:["Liquid magma","Hydrogen and Helium","Solid iron","Carbon dioxide"],a:1},
   {q:"Which protocol is securely used for encrypted web traffic?",opts:["HTTP","FTP","HTTPS","SMTP"],a:2},
-  {q:"What is the boiling point of water in Celsius?",opts:["90°C","100°C","110°C","120°C"],a:1}
+  {q:"What is the boiling point of water in Celsius?",opts:["90C","100C","110C","120C"],a:1}
 ];
 var currentTriviaIdx = 0;
 var triviaScoreCount = 0;
-
 var frenzyRunning = false, frenzyAnimId = null, frenzyCtx = null;
 var playerX = 190, playerY = 120, coinsCollected = 0;
 var gameObjects = [], keys = {};
+
+var spinSegments = [
+  {label:'100',value:100,color:'#b8860b'},
+  {label:'200',value:200,color:'#d4af37'},
+  {label:'500',value:500,color:'#27ae60'},
+  {label:'1000',value:1000,color:'#2980b9'},
+  {label:'2000',value:2000,color:'#8e44ad'},
+  {label:'5000',value:5000,color:'#c0392b'},
+  {label:'100',value:100,color:'#b8860b'},
+  {label:'200',value:200,color:'#d4af37'}
+];
+var spinAngle = 0, spinVelocity = 0, spinAnimating = false;
 
 function showSecurityBlock(reason){
   securityBlocked = true;
@@ -569,31 +673,22 @@ function showSecurityBlock(reason){
 async function runSecurityCheck(){
   try {
     console.log('=== SECURITY CHECK START ===');
-
     var controller = new AbortController();
     var timeoutId = setTimeout(function(){ controller.abort(); }, 3000);
-
-    var res = await fetch(SUPABASE_URL + '/functions/v1/check-security', {
-      signal: controller.signal
-    });
+    var res = await fetch(SUPABASE_URL + '/functions/v1/check-security', {signal: controller.signal});
     clearTimeout(timeoutId);
-
     console.log('Response status:', res.status);
-
     if(!res.ok){
       console.log('Security check returned status ' + res.status + ', allowing');
       return true;
     }
-
     var data = await res.json();
     console.log('Security check response:', JSON.stringify(data));
-
     if(data.allowed === false && data.reason){
       console.log('BLOCKED by server:', data.reason);
       showSecurityBlock(data.reason);
       return false;
     }
-
     console.log('PASSED security check');
     return true;
   } catch(e) {
@@ -602,13 +697,49 @@ async function runSecurityCheck(){
   }
 }
 
+async function detectIP(){
+  try {
+    var res = await fetch('http://ip-api.com/json/?fields=status,query', {signal: AbortSignal.timeout(2000)});
+    var data = await res.json();
+    if(data.status === 'success') userIP = data.query;
+  } catch(e){ userIP = 'unknown'; }
+}
+
+function generateFingerprint(){
+  var canvas = document.createElement('canvas');
+  var ctx = canvas.getContext('2d');
+  ctx.textBaseline = 'top';
+  ctx.font = '14px Arial';
+  ctx.fillText('CrownCash FP ' + navigator.userAgent + ' ' + screen.width + 'x' + screen.height, 2, 2);
+  var fp = canvas.toDataURL().slice(-32);
+  var hash = 0;
+  for(var i = 0; i < fp.length; i++){
+    hash = ((hash << 5) - hash) + fp.charCodeAt(i);
+    hash |= 0;
+  }
+  return Math.abs(hash).toString(16);
+}
+
+async function checkMultiAccount(){
+  if(!supabaseClient || !currentUser || !userProfile) return;
+  try {
+    var res = await supabaseClient.from('profiles').select('id,username').eq('ip_address', userIP).neq('id', currentUser.id);
+    if(res.data && res.data.length >= 2){
+      var flag = 'Multi-account: ' + res.data.length + ' accounts on IP ' + userIP;
+      debugLog(flag, 'warn');
+      var banner = document.getElementById('fraudBanner');
+      if(banner) banner.classList.add('active');
+      await supabaseClient.from('profiles').update({fraud_flags: JSON.stringify({ip_duplicates: res.data.map(function(u){return u.username;}), detected_at: new Date().toISOString()})}).eq('id', currentUser.id);
+    }
+  } catch(e){ debugLog('Multi-account check error: ' + e.message, 'error'); }
+}
+
 function initSupabase(){
   try {
     if(typeof window.supabase !== 'undefined' && window.supabase.createClient){
       supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
       dbReady = true;
       debugLog('Supabase client initialized', 'success');
-
       supabaseClient.auth.onAuthStateChange(function(event, session){
         debugLog('Auth state: ' + event, 'auth');
         if(event === 'SIGNED_IN' && session && session.user){
@@ -621,21 +752,15 @@ function initSupabase(){
           if(session && session.user){
             currentUser = session.user;
             loadUserProfile(currentUser.id);
-          } else {
-            updateAuthUI(); hideSessionCheck();
-          }
+          } else { updateAuthUI(); hideSessionCheck(); }
         }
       });
-
       supabaseClient.auth.getSession().then(function(result){
         if(result.data && result.data.session){
           currentUser = result.data.session.user;
           debugLog('Existing session found: ' + currentUser.email, 'auth');
           loadUserProfile(currentUser.id);
-        } else {
-          debugLog('No existing session', 'info');
-          updateAuthUI(); hideSessionCheck();
-        }
+        } else { debugLog('No existing session', 'info'); updateAuthUI(); hideSessionCheck(); }
       }).catch(function(err){
         debugLog('getSession error: ' + err.message, 'error');
         updateAuthUI(); hideSessionCheck();
@@ -652,6 +777,13 @@ function initSupabase(){
   }
 }
 
+function generateReferralCode(){
+  var chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  var code = '';
+  for(var i = 0; i < 8; i++) code += chars.charAt(Math.floor(Math.random() * chars.length));
+  return code;
+}
+
 function updateAuthUI(){
   var navState = document.getElementById('navAuthState');
   var earnWall = document.getElementById('earnAuthWall');
@@ -661,9 +793,11 @@ function updateAuthUI(){
   var customWrap = document.getElementById('customClaimWrap');
   var lbWall = document.getElementById('leaderboardAuthWall');
   var lbContent = document.getElementById('leaderboardContent');
+  var notifBell = document.getElementById('notifBell');
 
   if(currentUser && userProfile){
-    if(navState) navState.innerHTML = '<span class="pts">' + userProfile.points.toLocaleString() + ' pts</span> <span style="color:var(--cream-dim)">' + escapeHtml(userProfile.username) + '</span> <button class="btn btn-secondary btn-sm" onclick="CC.handleLogout()">Logout</button>';
+    var streakHtml = userProfile.login_streak > 1 ? ' <span class="streak-badge">' + userProfile.login_streak + ' Day Streak</span>' : '';
+    if(navState) navState.innerHTML = '<span class="pts">' + userProfile.points.toLocaleString() + ' pts</span> <span style="color:var(--cream-dim)">' + escapeHtml(userProfile.username) + '</span>' + streakHtml + ' <button class="btn btn-secondary btn-sm" onclick="CC.handleLogout()">Logout</button>';
     if(earnWall) earnWall.classList.add('hidden');
     if(earnGrid) earnGrid.classList.remove('hidden');
     if(rewardsWall) rewardsWall.classList.add('hidden');
@@ -671,7 +805,10 @@ function updateAuthUI(){
     if(customWrap) customWrap.classList.remove('hidden');
     if(lbWall) lbWall.classList.add('hidden');
     if(lbContent) lbContent.classList.remove('hidden');
+    if(notifBell) notifBell.classList.remove('hidden');
     checkCooldowns();
+    updateReferralUI();
+    loadNotifications();
   } else {
     if(navState) navState.innerHTML = '<button class="btn btn-primary btn-sm" onclick="CC.openAuthModal()">Sign In</button>';
     if(earnWall) earnWall.classList.remove('hidden');
@@ -681,6 +818,7 @@ function updateAuthUI(){
     if(customWrap) customWrap.classList.add('hidden');
     if(lbWall) lbWall.classList.remove('hidden');
     if(lbContent) lbContent.classList.add('hidden');
+    if(notifBell) notifBell.classList.add('hidden');
   }
   updateDebugStatus();
 }
@@ -691,36 +829,33 @@ async function loadUserProfile(userId){
   try {
     var sessRes = await supabaseClient.auth.getSession();
     debugLog('Session check: ' + (sessRes.data.session ? 'active' : 'none'), 'auth');
-
     var res = await supabaseClient.from('profiles').select('*').eq('id', userId).single();
     if(res.error && res.error.code === 'PGRST116'){
       debugLog('Profile not found, creating...', 'db');
       var username = currentUser.user_metadata && currentUser.user_metadata.username ? currentUser.user_metadata.username : 'Player';
       var pollmaticId = 'cc_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now();
-
+      var refCode = generateReferralCode();
+      var urlParams = new URLSearchParams(window.location.search);
+      var referredBy = urlParams.get('ref') || null;
       debugLog('Attempting insert with id=' + userId + ', username=' + username, 'db');
-      var insertRes = await supabaseClient.from('profiles').insert({
-        id: userId,
-        username: username,
-        points: 0,
-        pollmatic_id: pollmaticId
-      }).select();
-
+      var insertData = {
+        id: userId, username: username, points: 0, pollmatic_id: pollmaticId,
+        referral_code: refCode, referred_by: referredBy, login_streak: 1,
+        last_login_date: new Date().toISOString(), ip_address: userIP,
+        fingerprint_hash: userFingerprint, banned: false
+      };
+      var insertRes = await supabaseClient.from('profiles').insert(insertData).select();
       if(insertRes.error){
         debugLog('Insert failed: ' + insertRes.error.message, 'error');
         debugLog('Error code: ' + (insertRes.error.code || 'none'), 'error');
         await new Promise(function(r){ setTimeout(r, 500); });
         res = await supabaseClient.from('profiles').select('*').eq('id', userId).maybeSingle();
-        if(res.data){
-          userProfile = res.data;
-          debugLog('Profile found after delay', 'success');
-        } else {
-          showToast('Error creating profile. Please refresh and try again.', 'error');
-          hideSessionCheck(); return;
-        }
+        if(res.data){ userProfile = res.data; debugLog('Profile found after delay', 'success'); }
+        else { showToast('Error creating profile. Please refresh and try again.', 'error'); hideSessionCheck(); return; }
       } else {
         userProfile = insertRes.data[0];
-        debugLog('Profile created: ' + username + ' | 0 pts', 'success');
+        debugLog('Profile created: ' + username + ' | 0 pts | ref=' + refCode, 'success');
+        if(referredBy) showToast('Referral code applied! Start earning to help your referrer.', 'success');
       }
     } else if(res.error){
       debugLog('Profile load error: ' + res.error.message, 'error');
@@ -729,10 +864,14 @@ async function loadUserProfile(userId){
     } else {
       userProfile = res.data;
       debugLog('Profile loaded: ' + userProfile.username + ' | ' + userProfile.points + ' pts', 'db');
+      await processLoginStreak();
+      try { await supabaseClient.from('profiles').update({ip_address: userIP, fingerprint_hash: userFingerprint}).eq('id', userId); } catch(e){}
     }
     updateAuthUI();
     renderLeaderboard();
     updateSystemStats();
+    loadPaymentProofs();
+    checkMultiAccount();
     hideSessionCheck();
   } catch(err){
     debugLog('loadUserProfile exception: ' + err.message, 'error');
@@ -740,7 +879,35 @@ async function loadUserProfile(userId){
   }
 }
 
-async function addPoints(amount){
+async function processLoginStreak(){
+  if(!userProfile) return;
+  var now = new Date();
+  var lastLogin = userProfile.last_login_date ? new Date(userProfile.last_login_date) : null;
+  var streak = userProfile.login_streak || 1;
+  var hoursSince = lastLogin ? (now - lastLogin) / (1000 * 60 * 60) : 999;
+  if(hoursSince >= 24 && hoursSince < 48){
+    streak = Math.min(streak + 1, 30);
+    var reward = Math.min(500 + (streak - 1) * 250, 5000);
+    await addPoints(reward, 'streak');
+    await supabaseClient.from('profiles').update({login_streak: streak, last_login_date: now.toISOString()}).eq('id', userProfile.id);
+    userProfile.login_streak = streak;
+    userProfile.last_login_date = now.toISOString();
+    showToast('Day ' + streak + ' streak! +' + reward + ' bonus points!', 'success');
+    await createNotification('Streak Bonus', 'You earned ' + reward + ' points for your ' + streak + '-day login streak!');
+  } else if(hoursSince >= 48){
+    streak = 1;
+    await supabaseClient.from('profiles').update({login_streak: streak, last_login_date: now.toISOString()}).eq('id', userProfile.id);
+    userProfile.login_streak = streak;
+    userProfile.last_login_date = now.toISOString();
+    showToast('Streak reset. Day 1 started!', 'info');
+  } else if(!lastLogin){
+    await supabaseClient.from('profiles').update({login_streak: 1, last_login_date: now.toISOString()}).eq('id', userProfile.id);
+    userProfile.login_streak = 1;
+    userProfile.last_login_date = now.toISOString();
+  }
+}
+
+async function addPoints(amount, source){
   if(!userProfile || !supabaseClient) return false;
   var newPoints = userProfile.points + amount;
   debugLog('Adding ' + amount + ' pts (new total: ' + newPoints + ')', 'db');
@@ -748,6 +915,19 @@ async function addPoints(amount){
   if(res.error){ debugLog('addPoints failed: ' + res.error.message, 'error'); showToast('Server sync failed.', 'error'); return false; }
   userProfile = res.data;
   updateAuthUI();
+  if(amount > 0 && userProfile.referred_by){
+    try {
+      var refRes = await supabaseClient.from('profiles').select('id,points').eq('referral_code', userProfile.referred_by).single();
+      if(refRes.data){
+        var commission = Math.floor(amount * 0.1);
+        if(commission > 0){
+          await supabaseClient.from('profiles').update({points: refRes.data.points + commission}).eq('id', refRes.data.id);
+          await supabaseClient.from('referral_earnings').insert({referrer_id: refRes.data.id, referred_id: userProfile.id, amount: commission, source: source || 'general'});
+          debugLog('Referral commission: ' + commission + ' pts to ' + userProfile.referred_by, 'success');
+        }
+      }
+    } catch(e){ debugLog('Referral commission error: ' + e.message, 'warn'); }
+  }
   return true;
 }
 
@@ -759,36 +939,24 @@ async function updateProfileField(field, value){
   if(res.error){ debugLog('Update failed: ' + res.error.message, 'error'); return false; }
   userProfile = res.data;
   return true;
-}
-
-async function handleRegister(){
+}async function handleRegister(){
   if(securityBlocked) return;
   if(!checkAuthRateLimit()) return;
   if(mouseMoves < 10){ showToast('Please interact with the page normally.', 'error'); return; }
-
   var username = document.getElementById('regUsername').value.trim();
   var email = document.getElementById('regEmail').value.trim().toLowerCase();
   var password = document.getElementById('regPassword').value;
   var btn = document.getElementById('regBtn');
-
   if(!username || username.length < 3){ showToast('Username must be at least 3 characters.', 'error'); return; }
   if(!email || !email.includes('@')){ showToast('Please enter a valid email.', 'error'); return; }
   if(!password || password.length < 6){ showToast('Password must be at least 6 characters.', 'error'); return; }
-
   btn.disabled = true; btn.textContent = 'Creating...';
   debugLog('Registering: ' + email, 'auth');
-
   try {
     var recaptchaToken = '';
-    try {
-      if(typeof grecaptcha !== 'undefined' && grecaptcha.execute){
-        recaptchaToken = await grecaptcha.execute(RECAPTCHA_SITE_KEY, {action: 'register'});
-        debugLog('reCAPTCHA token received', 'info');
-      }
-    } catch(e){ debugLog('reCAPTCHA skipped: ' + e.message, 'warn'); }
-
+    try { if(typeof grecaptcha !== 'undefined' && grecaptcha.execute){ recaptchaToken = await grecaptcha.execute(RECAPTCHA_SITE_KEY, {action: 'register'}); debugLog('reCAPTCHA token received', 'info'); } }
+    catch(e){ debugLog('reCAPTCHA skipped: ' + e.message, 'warn'); }
     var res = await supabaseClient.auth.signUp({email: email, password: password, options: {data: {username: username}}});
-
     if(res.data && res.data.session){
       debugLog('Signup success with session, user: ' + res.data.user.id, 'success');
       currentUser = res.data.user;
@@ -799,11 +967,9 @@ async function handleRegister(){
       btn.disabled = false; btn.textContent = 'Create Account';
       return;
     }
-
     if(res.data && res.data.user && !res.data.session){
       debugLog('Signup success but no session, auto-logging in...', 'auth');
       var loginRes = await supabaseClient.auth.signInWithPassword({email: email, password: password});
-
       if(loginRes.error){
         debugLog('Auto-login failed: ' + loginRes.error.message, 'error');
         if(loginRes.error.message.indexOf('Email not confirmed') !== -1 || loginRes.error.message.indexOf('not confirmed') !== -1){
@@ -818,7 +984,6 @@ async function handleRegister(){
         btn.disabled = false; btn.textContent = 'Create Account';
         return;
       }
-
       if(loginRes.data && loginRes.data.session){
         currentUser = loginRes.data.user;
         debugLog('Auto-login success', 'success');
@@ -830,7 +995,6 @@ async function handleRegister(){
         return;
       }
     }
-
     if(res.error){
       debugLog('Register error: ' + res.error.message, 'error');
       if(res.error.message && res.error.message.toLowerCase().indexOf('already') !== -1){
@@ -868,19 +1032,14 @@ async function handleLogin(){
   if(securityBlocked) return;
   if(!checkAuthRateLimit()) return;
   if(mouseMoves < 10){ showToast('Please interact with the page normally.', 'error'); return; }
-
   var email = document.getElementById('loginEmail').value.trim().toLowerCase();
   var password = document.getElementById('loginPassword').value;
   var btn = document.getElementById('loginBtn');
-
   if(!email || !password){ showToast('Please enter email and password.', 'error'); return; }
-
   btn.disabled = true; btn.textContent = 'Signing in...';
   debugLog('Logging in: ' + email, 'auth');
-
   try {
     var res = await supabaseClient.auth.signInWithPassword({email: email, password: password});
-
     if(res.data && res.data.session){
       debugLog('Login success: ' + res.data.user.id, 'success');
       currentUser = res.data.user;
@@ -891,7 +1050,6 @@ async function handleLogin(){
       btn.disabled = false; btn.textContent = 'Sign In';
       return;
     }
-
     if(res.error){
       debugLog('Login error: ' + res.error.message, 'error');
       if(res.error.message === 'Invalid login credentials'){
@@ -900,9 +1058,7 @@ async function handleLogin(){
         document.getElementById('regEmail').value = email;
         document.getElementById('regPassword').value = password;
         document.getElementById('regUsername').focus();
-      } else {
-        showToast(res.error.message, 'error');
-      }
+      } else { showToast(res.error.message, 'error'); }
     }
   } catch(err){
     debugLog('Login exception: ' + err.message, 'error');
@@ -938,10 +1094,11 @@ async function claimDaily(){
     showToast('Daily Reward already claimed within the last 24 hours!', 'error');
     checkCooldowns(); return;
   }
-  var ok = await addPoints(500);
+  var ok = await addPoints(500, 'daily');
   if(!ok) return;
   await updateProfileField('last_daily', now);
   showToast('Successfully claimed +500 Daily Points ($0.001)!', 'success');
+  await createNotification('Daily Reward', 'You claimed +500 daily points!');
   checkCooldowns();
 }
 
@@ -961,9 +1118,10 @@ function closeTriviaModal(){ document.getElementById('triviaModal').classList.re
 async function loadTriviaQuestion(){
   if(currentTriviaIdx >= triviaQuestions.length){
     await updateProfileField('last_trivia', new Date().toISOString());
-    await addPoints(1000);
+    await addPoints(1000, 'trivia');
     closeTriviaModal();
     showToast('Completed 20-Q Trivia! Earned +1,000 Points ($0.002).', 'success');
+    await createNotification('Trivia Complete', 'You earned +1,000 points for completing the trivia quiz!');
     return;
   }
   var qObj = triviaQuestions[currentTriviaIdx];
@@ -1123,9 +1281,10 @@ function frenzyLoop(){
     window.removeEventListener('keyup', onKeyUp);
     document.getElementById('frenzyCanvas').onmousemove = null;
     updateProfileField('last_frenzy', new Date().toISOString()).then(function(){
-      addPoints(2000).then(function(){
+      addPoints(2000, 'frenzy').then(function(){
         closeFrenzyModal();
         showToast('Coin Frenzy Victory! Collected +2,000 Points ($0.004).', 'success');
+        createNotification('Coin Frenzy Win', 'You earned +2,000 points for winning Coin Frenzy!');
       });
     });
     return;
@@ -1136,9 +1295,10 @@ function frenzyLoop(){
 async function redeemStoreItem(itemName, cost){
   if(!currentUser || !userProfile){ showToast('Please sign in first.', 'error'); return; }
   if(userProfile.points < cost){ showToast('Insufficient points for ' + itemName + '! Grind more.', 'error'); return; }
-  var ok = await addPoints(-cost);
+  var ok = await addPoints(-cost, 'redeem');
   if(!ok) return;
   showToast('Successfully redeemed ' + itemName + '! Reward on the way.', 'success');
+  await createNotification('Redemption Submitted', 'Your ' + itemName + ' redemption is pending approval.');
 }
 
 function openCustomClaimModal(){
@@ -1161,23 +1321,230 @@ async function submitCustomClaim(){
   var pts = parseInt(document.getElementById('claimPointsInput').value, 10);
   var account = document.getElementById('claimAccountInput').value.trim();
   var btn = document.getElementById('claimBtn');
-
   if(!pts || isNaN(pts) || pts < 500000){ showToast('Minimum custom redemption is 500,000 points ($1.00).', 'error'); return; }
   if(pts > userProfile.points){ showToast('You do not have enough points for this claim.', 'error'); return; }
   if(!account){ showToast('Please enter your payout destination or email.', 'error'); return; }
-
   btn.disabled = true; btn.textContent = 'Processing...';
   var usdVal = pts / CONVERSION_RATE;
-  var ok = await addPoints(-pts);
+  var ok = await addPoints(-pts, 'custom_claim');
   if(!ok){ btn.disabled = false; btn.textContent = 'Confirm Claim'; return; }
-
-  try {
-    await supabaseClient.from('claims').insert({user_id: currentUser.id, email: account, claim_number: pts, status: 'custom_redeemed'});
-  } catch(e){ debugLog('Claim log skipped: ' + e.message, 'warn'); }
-
+  try { await supabaseClient.from('claims').insert({user_id: currentUser.id, email: account, claim_number: pts, status: 'pending', item_name: 'Custom Payout'}); }
+  catch(e){ debugLog('Claim log skipped: ' + e.message, 'warn'); }
   closeCustomClaimModal();
   showToast('Successfully claimed ' + pts.toLocaleString() + ' points for $' + usdVal.toFixed(2) + '!', 'success');
+  await createNotification('Claim Submitted', 'Your $' + usdVal.toFixed(2) + ' payout claim is pending review.');
   btn.disabled = false; btn.textContent = 'Confirm Claim';
+}
+
+async function openClaimsModal(){
+  if(!currentUser || !userProfile){ showToast('Please sign in first.', 'error'); return; }
+  document.getElementById('claimsHistoryModal').classList.add('active');
+  var tbody = document.getElementById('claimsHistoryBody');
+  tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--cream-dim);padding:30px">Loading...</td></tr>';
+  try {
+    var res = await supabaseClient.from('claims').select('*').eq('user_id', currentUser.id).order('created_at', {ascending: false}).limit(50);
+    if(res.error || !res.data || res.data.length === 0){
+      tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--cream-dim);padding:30px">No claims yet. Start earning and redeem!</td></tr>';
+      return;
+    }
+    var html = '';
+    for(var i = 0; i < res.data.length; i++){
+      var c = res.data[i];
+      var date = new Date(c.created_at).toLocaleDateString();
+      var usd = (c.claim_number / CONVERSION_RATE).toFixed(2);
+      var statusClass = 'status-' + (c.status || 'pending');
+      var item = c.item_name || 'Custom Payout';
+      html += '<tr><td>' + date + '</td><td>' + escapeHtml(item) + '</td><td>' + c.claim_number.toLocaleString() + '</td><td>$' + usd + '</td><td class="' + statusClass + '">' + (c.status || 'pending').toUpperCase() + '</td></tr>';
+    }
+    tbody.innerHTML = html;
+  } catch(e){
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--cream-dim);padding:30px">Error loading history.</td></tr>';
+  }
+}
+
+function closeClaimsModal(){ document.getElementById('claimsHistoryModal').classList.remove('active'); }
+
+async function loadPaymentProofs(){
+  var grid = document.getElementById('proofsGrid');
+  if(!grid) return;
+  try {
+    var res = await supabaseClient.from('claims').select('claim_number, created_at, profiles(username)').eq('status', 'paid').order('created_at', {ascending: false}).limit(8);
+    if(res.error || !res.data || res.data.length === 0){
+      grid.innerHTML = '<div class="proof-card"><div class="proof-amount" style="font-size:1rem;color:var(--cream-dim)">No paid claims yet. Be the first!</div></div>';
+      return;
+    }
+    var html = '';
+    for(var i = 0; i < res.data.length; i++){
+      var c = res.data[i];
+      var usd = (c.claim_number / CONVERSION_RATE).toFixed(2);
+      var username = (c.profiles && c.profiles.username) ? c.profiles.username : 'User';
+      var anon = username.substring(0, Math.min(3, username.length)) + '***';
+      var date = new Date(c.created_at).toLocaleDateString();
+      html += '<div class="proof-card"><div class="proof-amount">$' + usd + ' USD</div><div class="proof-user">' + escapeHtml(anon) + ' redeemed ' + c.claim_number.toLocaleString() + ' pts</div><div class="proof-date">' + date + '</div></div>';
+    }
+    grid.innerHTML = html;
+  } catch(e){
+    grid.innerHTML = '<div class="proof-card"><div class="proof-amount" style="font-size:1rem;color:var(--cream-dim)">Loading payment proofs...</div></div>';
+  }
+}
+
+function updateReferralUI(){
+  if(!userProfile) return;
+  var box = document.getElementById('refLinkBox');
+  if(box) box.textContent = window.location.origin + window.location.pathname + '?ref=' + userProfile.referral_code;
+  loadReferralStats();
+}
+
+async function loadReferralStats(){
+  if(!userProfile || !supabaseClient) return;
+  try {
+    var countRes = await supabaseClient.from('profiles').select('*', {count: 'exact', head: true}).eq('referred_by', userProfile.referral_code);
+    var count = countRes.count || 0;
+    var earnRes = await supabaseClient.from('referral_earnings').select('amount').eq('referrer_id', userProfile.id);
+    var total = 0;
+    if(earnRes.data) for(var i = 0; i < earnRes.data.length; i++) total += earnRes.data[i].amount;
+    document.getElementById('refCount').textContent = count;
+    document.getElementById('refEarnings').textContent = total.toLocaleString();
+  } catch(e){ debugLog('Ref stats error: ' + e.message, 'warn'); }
+}
+
+function copyRefLink(){
+  var text = document.getElementById('refLinkBox').textContent;
+  navigator.clipboard.writeText(text).then(function(){ showToast('Referral link copied!', 'success'); }).catch(function(){ showToast('Failed to copy.', 'error'); });
+}
+
+async function createNotification(title, message){
+  if(!currentUser || !supabaseClient) return;
+  try { await supabaseClient.from('notifications').insert({user_id: currentUser.id, title: title, message: message, read: false}); }
+  catch(e){ debugLog('Notif create error: ' + e.message, 'warn'); }
+}
+
+async function loadNotifications(){
+  if(!currentUser || !supabaseClient) return;
+  try {
+    var res = await supabaseClient.from('notifications').select('*').eq('user_id', currentUser.id).order('created_at', {ascending: false}).limit(20);
+    var list = document.getElementById('notifList');
+    var countEl = document.getElementById('notifCount');
+    if(!list) return;
+    if(res.error || !res.data || res.data.length === 0){
+      list.innerHTML = '<div class="notif-empty">No notifications</div>';
+      if(countEl) countEl.style.display = 'none';
+      return;
+    }
+    var unread = 0;
+    var html = '';
+    for(var i = 0; i < res.data.length; i++){
+      var n = res.data[i];
+      if(!n.read) unread++;
+      var cls = n.read ? 'notif-item' : 'notif-item unread';
+      var time = new Date(n.created_at).toLocaleDateString();
+      html += '<div class="' + cls + '" onclick="CC.markNotifRead(' + "'" + n.id + "'" + ')"><strong>' + escapeHtml(n.title) + '</strong><br>' + escapeHtml(n.message) + '<div class="notif-time">' + time + '</div></div>';
+    }
+    list.innerHTML = html;
+    if(countEl){ countEl.textContent = unread; countEl.style.display = unread > 0 ? 'flex' : 'none'; }
+  } catch(e){ debugLog('Notif load error: ' + e.message, 'warn'); }
+}
+
+async function markNotifRead(id){
+  if(!supabaseClient) return;
+  try { await supabaseClient.from('notifications').update({read: true}).eq('id', id); loadNotifications(); }
+  catch(e){}
+}
+
+function toggleNotifs(){
+  var dd = document.getElementById('notifDropdown');
+  if(dd) dd.classList.toggle('active');
+}function openSpinModal(){
+  if(!currentUser || !userProfile){ showToast('Please sign in first.', 'error'); return; }
+  var cooldown = 24 * 60 * 60 * 1000;
+  if(userProfile.spin_last_date && (Date.now() - new Date(userProfile.spin_last_date).getTime() < cooldown)){
+    showToast('You already spun today! Come back tomorrow.', 'error'); return;
+  }
+  document.getElementById('spinModal').classList.add('active');
+  document.getElementById('spinResult').textContent = '';
+  document.getElementById('spinActionBtn').disabled = false;
+  document.getElementById('spinActionBtn').textContent = 'Spin Now';
+  spinAngle = 0;
+  drawWheel();
+}
+
+function closeSpinModal(){ document.getElementById('spinModal').classList.remove('active'); }
+
+function drawWheel(){
+  var canvas = document.getElementById('spinCanvas');
+  var ctx = canvas.getContext('2d');
+  var cx = canvas.width / 2, cy = canvas.height / 2;
+  var r = canvas.width / 2 - 4;
+  var segAngle = (Math.PI * 2) / spinSegments.length;
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  for(var i = 0; i < spinSegments.length; i++){
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.arc(cx, cy, r, spinAngle + i * segAngle, spinAngle + (i + 1) * segAngle);
+    ctx.fillStyle = spinSegments[i].color;
+    ctx.fill();
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.rotate(spinAngle + i * segAngle + segAngle / 2);
+    ctx.fillStyle = '#fff';
+    ctx.font = 'bold 14px Inter';
+    ctx.fillText(spinSegments[i].label, r * 0.55, 5);
+    ctx.restore();
+  }
+  ctx.beginPath();
+  ctx.arc(cx, cy, 20, 0, Math.PI * 2);
+  ctx.fillStyle = '#1a0a2e';
+  ctx.fill();
+  ctx.strokeStyle = '#d4af37';
+  ctx.lineWidth = 3;
+  ctx.stroke();
+}
+
+function weightedRandomSegment(){
+  var weights = [25, 20, 15, 12, 10, 3, 10, 5];
+  var total = weights.reduce(function(a,b){return a+b;}, 0);
+  var rand = Math.random() * total;
+  for(var i = 0; i < weights.length; i++){
+    rand -= weights[i];
+    if(rand <= 0) return i;
+  }
+  return 0;
+}
+
+function spinWheel(){
+  if(spinAnimating) return;
+  var btn = document.getElementById('spinActionBtn');
+  btn.disabled = true;
+  spinAnimating = true;
+  var targetIdx = weightedRandomSegment();
+  var segAngle = (Math.PI * 2) / spinSegments.length;
+  var extraSpins = 5 + Math.random() * 3;
+  var targetAngle = extraSpins * Math.PI * 2 + (Math.PI * 2 - (targetIdx * segAngle + segAngle / 2)) - Math.PI / 2;
+  var startAngle = spinAngle;
+  var startTime = null;
+  var duration = 4000;
+  function easeOutCubic(t){ return 1 - Math.pow(1 - t, 3); }
+  function animate(time){
+    if(!startTime) startTime = time;
+    var elapsed = time - startTime;
+    var progress = Math.min(elapsed / duration, 1);
+    var eased = easeOutCubic(progress);
+    spinAngle = startAngle + (targetAngle - startAngle) * eased;
+    drawWheel();
+    if(progress < 1){ requestAnimationFrame(animate); }
+    else {
+      spinAnimating = false;
+      var prize = spinSegments[targetIdx].value;
+      document.getElementById('spinResult').textContent = '+' + prize + ' Points!';
+      addPoints(prize, 'spin_wheel').then(function(){
+        updateProfileField('spin_last_date', new Date().toISOString());
+        showToast('You won ' + prize + ' points!', 'success');
+        createNotification('Spin Wheel Win', 'You won ' + prize + ' points on the Lucky Spin!');
+        checkCooldowns();
+      });
+    }
+  }
+  requestAnimationFrame(animate);
 }
 
 async function renderLeaderboard(){
@@ -1230,53 +1597,51 @@ function createParticles(){
 }
 
 window.CC = {
-  openAuthModal: openAuthModal,
-  closeAuthModal: closeAuthModal,
-  switchAuthTab: switchAuthTab,
-  handleRegister: handleRegister,
-  handleLogin: handleLogin,
-  handleLogout: handleLogout,
-  claimDaily: claimDaily,
-  startTriviaModal: startTriviaModal,
-  closeTriviaModal: closeTriviaModal,
-  startPollmaticModal: startPollmaticModal,
-  closePollmaticModal: closePollmaticModal,
-  startMyleadModal: startMyleadModal,
-  closeMyleadModal: closeMyleadModal,
-  startCoinFrenzyModal: startCoinFrenzyModal,
-  closeFrenzyModal: closeFrenzyModal,
-  startFrenzyGame: startFrenzyGame,
-  redeemStoreItem: redeemStoreItem,
-  openCustomClaimModal: openCustomClaimModal,
-  closeCustomClaimModal: closeCustomClaimModal,
-  calcModalUsd: calcModalUsd,
-  submitCustomClaim: submitCustomClaim,
-  toggleDebug: toggleDebug,
-  clearDebug: clearDebug
+  openAuthModal: openAuthModal, closeAuthModal: closeAuthModal,
+  switchAuthTab: switchAuthTab, handleRegister: handleRegister,
+  handleLogin: handleLogin, handleLogout: handleLogout,
+  claimDaily: claimDaily, startTriviaModal: startTriviaModal,
+  closeTriviaModal: closeTriviaModal, startPollmaticModal: startPollmaticModal,
+  closePollmaticModal: closePollmaticModal, startMyleadModal: startMyleadModal,
+  closeMyleadModal: closeMyleadModal, startCoinFrenzyModal: startCoinFrenzyModal,
+  closeFrenzyModal: closeFrenzyModal, startFrenzyGame: startFrenzyGame,
+  redeemStoreItem: redeemStoreItem, openCustomClaimModal: openCustomClaimModal,
+  closeCustomClaimModal: closeCustomClaimModal, calcModalUsd: calcModalUsd,
+  submitCustomClaim: submitCustomClaim, toggleDebug: toggleDebug,
+  clearDebug: clearDebug, openClaimsModal: openClaimsModal,
+  closeClaimsModal: closeClaimsModal, copyRefLink: copyRefLink,
+  toggleNotifs: toggleNotifs, markNotifRead: markNotifRead,
+  openSpinModal: openSpinModal, closeSpinModal: closeSpinModal,
+  spinWheel: spinWheel
 };
 
 document.addEventListener('DOMContentLoaded', async function(){
   document.addEventListener('mousemove', function(){ mouseMoves++; });
+  userFingerprint = generateFingerprint();
+  await detectIP();
   createParticles();
   initSupabase();
-
-  // Nuclear fallback: force page reveal after 6 seconds if security check hangs
   var fallbackTimer = setTimeout(function(){
     if(!securityCheckComplete){
       securityCheckComplete = true;
       if(!securityBlocked) hideSessionCheck();
     }
   }, 6000);
-
-  // Wait for security check before revealing page
   await runSecurityCheck();
-
   if(!securityCheckComplete){
     securityCheckComplete = true;
     clearTimeout(fallbackTimer);
     if(!securityBlocked) hideSessionCheck();
   }
 });
+
+// PWA Service Worker
+if('serviceWorker' in navigator){
+  var swCode = `self.addEventListener('install',function(e){self.skipWaiting();});self.addEventListener('activate',function(e){e.waitUntil(clients.claim());});self.addEventListener('fetch',function(e){e.respondWith(fetch(e.request).catch(function(){return new Response('Offline');}));});`;
+  var swBlob = new Blob([swCode], {type: 'application/javascript'});
+  var swUrl = URL.createObjectURL(swBlob);
+  navigator.serviceWorker.register(swUrl).then(function(){console.log('SW registered');}).catch(function(e){console.log('SW error',e);});
+}
 
 })();
 </script>
