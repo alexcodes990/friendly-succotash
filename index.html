@@ -26,7 +26,7 @@ body{font-family:'Inter',sans-serif;background:var(--royal-deep);color:var(--cre
 </style>
 <base target="_blank">
 </head>
-<body><div id="securityBlock" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:#0d0418;z-index:9999;align-items:center;justify-content:center;flex-direction:colum[...]
+<body><div id="securityBlock" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:#0d0418;z-index:9999;align-items:center;justify-content:center;flex-direction:colum[[...]
 
 <!-- HTML content truncated in commit message but full file content is being updated -->
 
@@ -67,19 +67,16 @@ function generateReferralCode(){
   return code;
 }
 
-// Inserted/fixed updateReferralUI function (ensures legacy users get a referral_code and saves it)
 function updateReferralUI(){
   if(!userProfile) return;
-  // Auto-generate referral code if missing (for users created before v2)
   if(!userProfile.referral_code){
     var newCode = generateReferralCode();
     userProfile.referral_code = newCode;
-    // Fire-and-forget update to persist the new referral code
-    try { supabaseClient.from('profiles').update({referral_code: newCode}).eq('id', userProfile.id); } catch(e){ debugLog('Failed to persist referral_code: ' + e.message, 'warn'); }
+    supabaseClient.from('profiles').update({referral_code: newCode}).eq('id', userProfile.id);
   }
   var box = document.getElementById('refLinkBox');
   if(box) box.textContent = window.location.origin + window.location.pathname + '?ref=' + userProfile.referral_code;
-  if(typeof loadReferralStats === 'function') loadReferralStats();
+  loadReferralStats();
 }
 
 /* remainder of original script continues unchanged */
