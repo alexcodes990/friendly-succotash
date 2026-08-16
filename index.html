@@ -6,7 +6,7 @@
 <title>CrownCash - Royal Rewards & Cash Payouts</title>
 <meta name="theme-color" content="#1a0a2e">
 <meta name="description" content="Earn points and redeem for real cash rewards.">
-<link rel="manifest" href="data:application/json;base64,eyJuYW1lIjoiQ3Jvd25DYXNoIiwic2hvcnRfbmFtZSI6IkNyb3duQ2FzaCIsInN0YXJ0X3VybCI6Ii4iLCJkaXNwbGF5Ijoic3RhbmRhbG9uZSIsImJhY2tncm91bmRfY29sb3IiOiIjM[...]">
+<link rel="manifest" href="data:application/json;base64,eyJuYW1lIjoiQ3Jvd25DYXNoIiwic2hvcnRfbmFtZSI6IkNyb3duQ2FzaCIsInN0YXJ0X3VybCI6Ii4iLCJkaXNwbGF5Ijoic3RhbmRhbG9uZSIsImJhY2tncm91bmRfY29sb3IiOiIjMGQwNDE4IiwidGhlbWVfY29sb3IiOiIjMWEwYTJlIn0=">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="https://www.google.com/recaptcha/api.js?render=6LcEtoQtAAAAADOg9pRamqx8PlzAVyvonFFhqy2V"></script>
 <style>
@@ -21,16 +21,457 @@ body{font-family:'Inter',sans-serif;background:var(--royal-deep);color:var(--cre
 .particles{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:0;overflow:hidden}
 .particle{position:absolute;background:var(--gold);border-radius:50%;opacity:0;animation:floatUp 8s infinite ease-in-out}
 @keyframes floatUp{0%{transform:translateY(100vh) scale(0);opacity:0}10%{opacity:.6}90%{opacity:.6}100%{transform:translateY(-10vh) scale(1);opacity:0}}
-.navbar{position:sticky;top:0;z-index:50;background:rgba(13,4,24,.95);backdrop-filter:blur(10px);border-bottom:1px solid rgba(212,175,55,.15);padding:15px 30px;display:flex;justify-content:space-b[...]
-/* styles truncated in this commit for brevity - original file content preserved */
+.navbar{position:sticky;top:0;z-index:50;background:rgba(13,4,24,.95);backdrop-filter:blur(10px);border-bottom:1px solid rgba(212,175,55,.15);padding:15px 30px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px}
+.nav-brand{display:flex;align-items:center;gap:10px;font-family:'Cinzel',serif;font-size:1.4rem;font-weight:900;color:var(--gold-light);text-decoration:none}
+.nav-links{display:flex;gap:25px;list-style:none;align-items:center}
+.nav-links a{color:var(--cream-dim);text-decoration:none;font-size:.9rem;font-weight:500;transition:color .3s}
+.nav-links a:hover{color:var(--gold)}
+.nav-user-info{display:flex;align-items:center;gap:15px;background:rgba(212,175,55,.08);border:1px solid rgba(212,175,55,.2);padding:8px 16px;border-radius:50px;font-size:.9rem}
+.nav-user-info .pts{color:var(--gold-light);font-weight:700;font-family:'Cinzel',serif}
+.streak-badge{background:linear-gradient(135deg,var(--amber),#e67e22);color:#fff;font-size:.7rem;font-weight:700;padding:3px 10px;border-radius:20px;margin-left:6px;white-space:nowrap}
+.notification-bell{position:relative;cursor:pointer;padding:6px;border-radius:8px;transition:background .2s}
+.notification-bell:hover{background:rgba(212,175,55,.1)}
+.notification-bell .count{position:absolute;top:-2px;right:-2px;background:var(--red);color:#fff;font-size:.6rem;font-weight:700;width:16px;height:16px;border-radius:50%;display:flex;align-items:center;justify-content:center}
+.crown-divider{display:flex;align-items:center;justify-content:center;gap:20px;margin:30px 0}
+.crown-divider::before,.crown-divider::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent)}
+.container{position:relative;z-index:1;max-width:1000px;margin:0 auto;padding:40px 20px}
+.header{text-align:center;margin-bottom:30px}
+.header .crown-icon{width:48px;height:48px;margin:0 auto 10px;filter:drop-shadow(0 0 20px var(--gold-glow));animation:crownPulse 3s ease-in-out infinite}
+@keyframes crownPulse{0%,100%{transform:scale(1);filter:drop-shadow(0 0 20px var(--gold-glow))}50%{transform:scale(1.1);filter:drop-shadow(0 0 40px var(--gold-glow))}}
+.logo{font-family:'Cinzel',serif;font-size:3.2rem;font-weight:900;letter-spacing:4px;background:linear-gradient(180deg,var(--gold-light) 0%,var(--gold) 40%,var(--gold-dark) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.subtitle{color:var(--cream-dim);font-size:.95rem;letter-spacing:4px;text-transform:uppercase;margin-top:8px;line-height:1.6;max-width:700px;margin-left:auto;margin-right:auto}
+.stats-bar{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:15px;margin-bottom:30px;text-align:center}
+.stat-pill{background:rgba(212,175,55,.04);border:1px solid rgba(212,175,55,.15);border-radius:12px;padding:15px}
+.stat-pill .num{font-family:'Cinzel',serif;font-size:1.4rem;font-weight:700;color:var(--gold-light)}
+.stat-pill .lbl{font-size:.75rem;color:var(--cream-dim);text-transform:uppercase;letter-spacing:1px;margin-top:4px}
+.card{background:linear-gradient(145deg,rgba(26,10,46,.9),rgba(13,4,24,.95));border:1px solid rgba(212,175,55,.15);border-radius:16px;padding:35px;margin-bottom:30px;position:relative;overflow:hidden}
+.card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--gold),transparent)}
+.card h2{font-family:'Cinzel',serif;font-size:1.5rem;color:var(--gold-light);margin-bottom:12px;letter-spacing:2px}
+.card p{color:var(--cream-dim);line-height:1.7;margin-bottom:20px;font-size:.95rem}
+.earn-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:20px;margin-top:20px}
+.earn-box{background:rgba(0,0,0,.25);border:1px solid rgba(212,175,55,.15);border-radius:14px;padding:25px;display:flex;flex-direction:column;justify-content:space-between;transition:transform .3s,border-color .3s}
+.earn-box:hover{transform:translateY(-3px);border-color:rgba(212,175,55,.4)}
+.earn-box h3{font-family:'Cinzel',serif;font-size:1.05rem;color:var(--gold-light);margin-bottom:10px}
+.earn-box p{font-size:.82rem;margin-bottom:20px;color:var(--cream-dim)}
+.store-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:20px;margin-top:20px}
+.store-item{background:rgba(0,0,0,.3);border:1px solid rgba(212,175,55,.15);border-radius:14px;padding:24px;text-align:center;transition:all .3s}
+.store-item:hover{border-color:var(--gold);transform:translateY(-4px);box-shadow:0 10px 30px rgba(212,175,55,.15)}
+.store-icon{width:40px;height:40px;margin:0 auto 12px;filter:drop-shadow(0 0 10px var(--gold-glow))}
+.store-item h4{font-family:'Cinzel',serif;font-size:1rem;color:var(--gold-light);margin-bottom:6px}
+.store-item .usd-val{font-size:.85rem;color:var(--emerald);font-weight:600;margin-bottom:4px}
+.store-item .pts-cost{font-size:.8rem;color:var(--cream-dim);margin-bottom:18px}
+.leaderboard-table{width:100%;border-collapse:collapse;margin-top:15px}
+.leaderboard-table th,.leaderboard-table td{padding:14px 18px;text-align:left;font-size:.9rem}
+.leaderboard-table th{font-family:'Cinzel',serif;font-size:.8rem;color:var(--gold);letter-spacing:2px;border-bottom:1px solid rgba(212,175,55,.2);text-transform:uppercase;background:rgba(0,0,0,.2)}
+.leaderboard-table td{border-bottom:1px solid rgba(212,175,55,.06);color:var(--cream)}
+.leaderboard-table tr:hover td{background:rgba(212,175,55,.03)}
+.rank-num{font-family:'Cinzel',serif;font-weight:700;color:var(--gold-light)}
+.btn{display:block;width:100%;padding:14px;border:none;border-radius:10px;font-size:.95rem;font-weight:700;cursor:pointer;transition:all .3s;font-family:'Inter',sans-serif;letter-spacing:1px;text-transform:uppercase;text-align:center;text-decoration:none}
+.btn-primary{background:linear-gradient(135deg,var(--gold-light),var(--gold),var(--gold-dark));color:var(--royal-deep);box-shadow:0 4px 20px rgba(212,175,55,.3)}
+.btn-primary:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 6px 25px rgba(212,175,55,.5)}
+.btn-primary:disabled{opacity:.4;cursor:not-allowed}
+.btn-secondary{background:rgba(212,175,55,.06);color:var(--cream);border:1px solid rgba(212,175,55,.2)}
+.btn-secondary:hover{background:rgba(212,175,55,.12);border-color:rgba(212,175,55,.4)}
+.btn-sm{padding:10px 16px;font-size:.8rem;width:auto}
+.btn-danger{background:linear-gradient(135deg,#e74c3c,#c0392b);color:#fff}
+.btn-danger:hover{transform:translateY(-2px);box-shadow:0 6px 25px rgba(231,76,60,.4)}
+.btn-success{background:linear-gradient(135deg,var(--emerald),var(--emerald-dark));color:#fff}
+.btn-success:hover{transform:translateY(-2px);box-shadow:0 6px 25px rgba(46,204,113,.4)}
+.modal-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(5,2,10,.9);backdrop-filter:blur(8px);display:none;align-items:center;justify-content:center;z-index:100;padding:20px}
+.modal-overlay.active{display:flex}
+.modal{background:linear-gradient(145deg,rgba(26,10,46,.98),rgba(13,4,24,.99));border:1px solid rgba(212,175,55,.2);border-radius:20px;padding:35px;max-width:520px;width:100%;text-align:center;position:relative;animation:slideUp .4s ease}
+.modal.wide{max-width:900px;padding:0;overflow:hidden}
+.modal.wide .modal-header{padding:20px 25px 0;display:flex;justify-content:space-between;align-items:center}
+.modal.wide .modal-header h3{margin:0}
+.modal.wide .modal-body{padding:0 25px 25px}
+@keyframes slideUp{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}
+.modal h3{font-family:'Cinzel',serif;font-size:1.4rem;color:var(--gold-light);margin-bottom:12px}
+.modal p{color:var(--cream-dim);margin-bottom:20px;font-size:.9rem;line-height:1.6}
+.form-group{margin-bottom:18px;text-align:left}
+.form-group label{display:block;margin-bottom:8px;color:var(--cream-dim);font-size:.75rem;letter-spacing:2px;text-transform:uppercase}
+.form-group input,.form-group select{width:100%;padding:14px 16px;background:rgba(0,0,0,.3);border:1px solid rgba(212,175,55,.2);border-radius:10px;color:var(--cream);font-size:.95rem;font-family:'Inter',sans-serif;outline:none;transition:all .3s}
+.form-group input:focus{border-color:var(--gold);box-shadow:0 0 12px rgba(212,175,55,.2)}
+.trivia-options{display:grid;grid-template-columns:1fr;gap:10px;margin-bottom:20px;text-align:left}
+.trivia-opt-btn{background:rgba(212,175,55,.05);border:1px solid rgba(212,175,55,.2);padding:12px 16px;border-radius:10px;color:var(--cream);cursor:pointer;font-size:.9rem;transition:all .2s;font-family:'Inter',sans-serif}
+.trivia-opt-btn:hover{background:rgba(212,175,55,.15);border-color:var(--gold)}
+.toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%) translateY(100px);background:linear-gradient(145deg,rgba(26,10,46,.98),rgba(13,4,24,.99));border:1px solid rgba(212,175,55,.2);padding:16px 28px;border-radius:12px;color:var(--cream);font-weight:500;z-index:200;opacity:0;transition:all .4s;box-shadow:0 10px 40px rgba(0,0,0,.5);font-size:.9rem}
+.toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+.toast.error{border-color:rgba(231,76,60,.4);color:var(--red)}
+.toast.success{border-color:rgba(46,204,113,.4);color:var(--emerald)}
+.pollmatic-iframe-wrap,.mylead-iframe-wrap{background:#05020a;border:1px solid rgba(212,175,55,.2);border-radius:12px;overflow:hidden;margin-bottom:15px}
+.pollmatic-iframe-wrap iframe,.mylead-iframe-wrap iframe{width:100%;height:520px;border:none;display:block}
+.auth-wall{background:rgba(0,0,0,.4);border:1px dashed rgba(212,175,55,.3);border-radius:14px;padding:40px 20px;text-align:center}
+.auth-wall h4{font-family:'Cinzel',serif;color:var(--gold-light);margin-bottom:10px;font-size:1.1rem}
+.auth-wall p{color:var(--cream-dim);font-size:.85rem;margin-bottom:20px}
+.auth-tabs{display:flex;gap:10px;margin-bottom:20px}
+.auth-tab{flex:1;padding:10px;background:rgba(212,175,55,.05);border:1px solid rgba(212,175,55,.15);border-radius:8px;color:var(--cream-dim);cursor:pointer;font-weight:600;transition:all .3s}
+.auth-tab.active{background:rgba(212,175,55,.15);border-color:var(--gold);color:var(--gold-light)}
+.session-check{position:fixed;top:0;left:0;width:100%;height:100%;background:var(--royal-deep);z-index:300;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:15px;transition:opacity .5s}
+.session-check.hidden{opacity:0;pointer-events:none}
+.session-check .spinner{width:40px;height:40px;border:3px solid rgba(212,175,55,.2);border-top-color:var(--gold);border-radius:50%;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.session-check p{color:var(--cream-dim);font-size:.9rem;letter-spacing:2px;text-transform:uppercase}
+footer{text-align:center;color:rgba(201,184,150,.4);margin-top:50px;font-size:.75rem;letter-spacing:1px}
+footer p{margin-bottom:5px}
+.hidden{display:none!important}
+.debug-toggle{position:fixed;bottom:20px;right:20px;z-index:400;width:44px;height:44px;border-radius:50%;background:var(--royal-purple);border:1px solid var(--gold);color:var(--gold-light);font-family:'JetBrains Mono',monospace;font-size:.7rem;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 15px rgba(0,0,0,.5);transition:all .3s}
+.debug-toggle:hover{background:var(--gold);color:var(--royal-deep)}
+.debug-toggle.active{background:var(--gold);color:var(--royal-deep)}
+.debug-panel{position:fixed;bottom:70px;right:20px;width:480px;max-width:calc(100vw - 40px);height:320px;background:var(--debug-bg);border:1px solid rgba(212,175,55,.25);border-radius:12px;z-index:400;display:none;flex-direction:column;overflow:hidden;box-shadow:0 10px 40px rgba(0,0,0,.7)}
+.debug-panel.active{display:flex}
+.debug-header{padding:10px 14px;background:rgba(212,175,55,.08);border-bottom:1px solid rgba(212,175,55,.15);display:flex;justify-content:space-between;align-items:center;font-family:'JetBrains Mono',monospace;font-size:.75rem;color:var(--gold-light);text-transform:uppercase;letter-spacing:1px}
+.debug-header button{background:none;border:none;color:var(--cream-dim);cursor:pointer;font-size:.8rem;padding:2px 6px;border-radius:4px;transition:all .2s}
+.debug-header button:hover{color:var(--red);background:rgba(231,76,60,.1)}
+.debug-logs{flex:1;overflow-y:auto;padding:10px 14px;font-family:'JetBrains Mono',monospace;font-size:.72rem;line-height:1.6}
+.debug-logs .log-entry{margin-bottom:4px;padding:3px 6px;border-radius:4px;word-break:break-all}
+.debug-logs .log-info{color:#64b5f6;background:rgba(100,181,246,.06)}
+.debug-logs .log-warn{color:#ffb74d;background:rgba(255,183,77,.06)}
+.debug-logs .log-error{color:#ef5350;background:rgba(239,83,80,.06)}
+.debug-logs .log-success{color:#81c784;background:rgba(129,199,132,.06)}
+.debug-logs .log-db{color:#ba68c8;background:rgba(186,104,200,.06)}
+.debug-logs .log-auth{color:#4dd0e1;background:rgba(77,208,225,.06)}
+.debug-logs .timestamp{color:var(--cream-dim);opacity:.6;margin-right:6px}
+.debug-status{padding:8px 14px;background:rgba(0,0,0,.3);border-top:1px solid rgba(212,175,55,.1);font-family:'JetBrains Mono',monospace;font-size:.65rem;color:var(--cream-dim);display:flex;gap:15px}
+.debug-status span{display:flex;align-items:center;gap:5px}
+.debug-status .dot{width:6px;height:6px;border-radius:50%;background:var(--red)}
+.debug-status .dot.ok{background:var(--emerald)}
+.wheel-container{position:relative;width:280px;height:280px;margin:0 auto 20px}
+.wheel-canvas{width:280px;height:280px;border-radius:50%;border:4px solid var(--gold);box-shadow:0 0 30px rgba(212,175,55,.2)}
+.wheel-pointer{position:absolute;top:-10px;left:50%;transform:translateX(-50%);width:0;height:0;border-left:12px solid transparent;border-right:12px solid transparent;border-top:20px solid var(--gold);z-index:10;filter:drop-shadow(0 2px 4px rgba(0,0,0,.5))}
+.wheel-result{font-family:'Cinzel',serif;font-size:1.6rem;color:var(--gold-light);margin-top:10px;min-height:40px}
+.claims-table{width:100%;border-collapse:collapse;margin-top:15px;font-size:.85rem}
+.claims-table th,.claims-table td{padding:10px 12px;text-align:left;border-bottom:1px solid rgba(212,175,55,.1)}
+.claims-table th{color:var(--gold);font-size:.75rem;text-transform:uppercase;letter-spacing:1px}
+.claims-table .status-pending{color:var(--amber)}
+.claims-table .status-approved{color:var(--emerald)}
+.claims-table .status-denied{color:var(--red)}
+.claims-table .status-paid{color:#3498db}
+.proof-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:15px;margin-top:20px}
+.proof-card{background:rgba(0,0,0,.3);border:1px solid rgba(212,175,55,.15);border-radius:12px;padding:18px;text-align:center}
+.proof-card .proof-amount{font-family:'Cinzel',serif;font-size:1.2rem;color:var(--emerald);font-weight:700}
+.proof-card .proof-user{color:var(--cream-dim);font-size:.8rem;margin-top:6px}
+.proof-card .proof-date{color:var(--cream-dim);font-size:.7rem;opacity:.6;margin-top:4px}
+.ref-link-box{background:rgba(0,0,0,.3);border:1px dashed rgba(212,175,55,.3);border-radius:10px;padding:12px 16px;font-family:'JetBrains Mono',monospace;font-size:.8rem;color:var(--gold-light);word-break:break-all;margin:10px 0;cursor:pointer;transition:all .2s}
+.ref-link-box:hover{background:rgba(212,175,55,.08);border-color:var(--gold)}
+.ref-stats{display:grid;grid-template-columns:1fr 1fr;gap:15px;margin-top:15px}
+.ref-stat{text-align:center;padding:12px;background:rgba(0,0,0,.2);border-radius:10px}
+.ref-stat .num{font-family:'Cinzel',serif;font-size:1.3rem;color:var(--gold-light)}
+.ref-stat .lbl{font-size:.7rem;color:var(--cream-dim);text-transform:uppercase;letter-spacing:1px;margin-top:4px}
+.notif-dropdown{position:absolute;top:45px;right:0;width:320px;max-width:calc(100vw - 40px);background:linear-gradient(145deg,rgba(26,10,46,.98),rgba(13,4,24,.99));border:1px solid rgba(212,175,55,.2);border-radius:12px;z-index:300;display:none;flex-direction:column;max-height:400px;overflow:hidden;box-shadow:0 10px 40px rgba(0,0,0,.7)}
+.notif-dropdown.active{display:flex}
+.notif-header{padding:12px 16px;border-bottom:1px solid rgba(212,175,55,.1);font-family:'Cinzel',serif;font-size:.9rem;color:var(--gold-light)}
+.notif-list{flex:1;overflow-y:auto;padding:8px}
+.notif-item{padding:10px 12px;border-radius:8px;margin-bottom:6px;font-size:.8rem;cursor:pointer;transition:background .2s;border-left:3px solid transparent}
+.notif-item:hover{background:rgba(212,175,55,.06)}
+.notif-item.unread{border-left-color:var(--gold);background:rgba(212,175,55,.04)}
+.notif-item .notif-time{font-size:.65rem;color:var(--cream-dim);opacity:.6;margin-top:4px}
+.notif-empty{padding:20px;text-align:center;color:var(--cream-dim);font-size:.8rem}
+.fraud-banner{background:linear-gradient(90deg,rgba(231,76,60,.15),rgba(231,76,60,.05));border:1px solid rgba(231,76,60,.3);border-radius:10px;padding:12px 16px;margin-bottom:20px;font-size:.85rem;color:#ff9f9f;display:none}
+.fraud-banner.active{display:block}
 </style>
 <base target="_blank">
 </head>
-<body><div id="securityBlock" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:#0d0418;z-index:9999;align-items:center;justify-content:center;flex-direction:colum[[...]
+<body><div id="securityBlock" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:#0d0418;z-index:9999;align-items:center;justify-content:center;flex-direction:column;text-align:center;padding:40px">
+  <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#e74c3c" stroke-width="1.5" style="margin-bottom:20px"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+  <h2 style="font-family:Cinzel,serif;color:#e74c3c;font-size:1.8rem;margin-bottom:15px">Access Denied</h2>
+  <p id="securityReason" style="color:var(--cream-dim);max-width:500px;line-height:1.7;margin-bottom:25px">Suspicious activity detected.</p>
+  <p style="color:var(--cream-dim);font-size:.8rem;opacity:.6">If you believe this is an error, contact support.</p>
+</div>
 
-<!-- HTML content truncated in commit message but full file content is being updated -->
+<div class="session-check" id="sessionCheck"><div class="spinner"></div><p>Checking session...</p></div>
+<div class="particles" id="particles"></div>
+<nav class="navbar">
+  <a href="#" class="nav-brand" onclick="return false;">
+    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#f4d03f" stroke-width="1.5" style="vertical-align:middle"><path d="M12 2L15 8L21 9L17 14L18 20L12 17L6 20L7 14L3 9L9 8Z"/></svg>
+    CrownCash
+  </a>
+  <ul class="nav-links">
+    <li><a href="#earn">Earn</a></li>
+    <li><a href="#rewards">Rewards</a></li>
+    <li><a href="#proofs">Proofs</a></li>
+    <li><a href="#leaderboard">Leaderboard</a></li>
+  </ul>
+  <div class="nav-user-info" id="navUserInfo">
+    <span id="navAuthState"><button class="btn btn-primary btn-sm" onclick="CC.openAuthModal()">Sign In</button></span>
+    <div id="notifBell" class="notification-bell hidden" onclick="CC.toggleNotifs()">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+      <span class="count" id="notifCount" style="display:none">0</span>
+      <div class="notif-dropdown" id="notifDropdown">
+        <div class="notif-header">Notifications</div>
+        <div class="notif-list" id="notifList"><div class="notif-empty">No notifications</div></div>
+      </div>
+    </div>
+  </div>
+</nav>
+<div class="container">
+  <div class="header">
+    <div class="crown-icon">
+      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#d4af37" stroke-width="1.2"><path d="M12 2L15 8L21 9L17 14L18 20L12 17L6 20L7 14L3 9L9 8Z" fill="rgba(212,175,55,0.15)"/></svg>
+    </div>
+    <div class="logo">CrownCash</div>
+    <p class="subtitle">A high-difficulty grinding economy. Earn extremely scarce points by conquering rigorous daily sessions and brutal minigames.</p>
+  </div>
+  <div class="stats-bar">
+    <div class="stat-pill"><div class="num" id="regUsersCount">--</div><div class="lbl">Registered Users</div></div>
+    <div class="stat-pill"><div class="num" id="systemValue">$0.00</div><div class="lbl">Total System Value</div></div>
+    <div class="stat-pill"><div class="num">500k : $1</div><div class="lbl">Conversion Rate</div></div>
+  </div>
+  <div id="fraudBanner" class="fraud-banner">Multiple accounts detected from this device/IP. Your account has been flagged for review.</div>
+  <div class="crown-divider"><span style="color:var(--gold);font-size:1.4rem">&bull;</span></div>
 
-<script>
+  <section id="earn" class="card">
+    <h2>Ways to Earn</h2>
+    <p>Grind your way up at a strict 500,000 pts / $1.00 USD exchange rate.</p>
+    <div id="earnAuthWall" class="auth-wall">
+      <h4>Account Required</h4>
+      <p>Create a free account or sign in to start earning points, playing games, and accessing offerwalls.</p>
+      <button class="btn btn-primary" onclick="CC.openAuthModal()" style="max-width:280px;margin:0 auto">Create Account / Sign In</button>
+    </div>
+    <div id="earnGrid" class="earn-grid hidden">
+      <div class="earn-box">
+        <div><h3>Pollmatic.io Offerwall</h3><p>Real surveys &amp; offers from premium providers. Payouts vary ($0.50–$5.00).</p></div>
+        <button class="btn btn-secondary" onclick="CC.startPollmaticModal()">Open Offerwall</button>
+      </div>
+      <div class="earn-box">
+        <div><h3>MyLead Offerwall</h3><p>4,000+ incent campaigns. Surveys, installs &amp; CPA offers. High eCPM payouts.</p></div>
+        <button class="btn btn-secondary" onclick="CC.startMyleadModal()">Open MyLead</button>
+      </div>
+      <div class="earn-box">
+        <div><h3>Daily Reward</h3><p>Claim +500 points every 24 hours. Small but consistent.</p></div>
+        <button class="btn btn-secondary" id="dailyBtn" onclick="CC.claimDaily()">Claim Daily</button>
+      </div>
+      <div class="earn-box">
+        <div><h3>20-Q Trivia</h3><p>Answer 20 general knowledge questions. +1,000 points if you pass.</p></div>
+        <button class="btn btn-secondary" id="triviaBtn" onclick="CC.startTriviaModal()">Start Trivia</button>
+      </div>
+      <div class="earn-box">
+        <div><h3>Coin Frenzy</h3><p>Collect 25 coins while dodging red hazards. +2,000 points on victory.</p></div>
+        <button class="btn btn-secondary" id="frenzyBtn" onclick="CC.startCoinFrenzyModal()">Play Now</button>
+      </div>
+      <div class="earn-box">
+        <div><h3>Lucky Spin</h3><p>Spin the wheel once per day. Win 100–5,000 points instantly!</p></div>
+        <button class="btn btn-secondary" id="spinBtn" onclick="CC.openSpinModal()">Spin Wheel</button>
+      </div>
+      <div class="earn-box" style="grid-column:1/-1">
+        <div><h3>Refer Friends</h3><p>Share your link and earn 10% of everything your referrals make. Forever.</p></div>
+        <div id="refSection">
+          <div class="ref-link-box" id="refLinkBox" onclick="CC.copyRefLink()" title="Click to copy">Loading referral link...</div>
+          <div class="ref-stats">
+            <div class="ref-stat"><div class="num" id="refCount">0</div><div class="lbl">Referrals</div></div>
+            <div class="ref-stat"><div class="num" id="refEarnings">0</div><div class="lbl">Points Earned</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="rewards" class="card">
+    <h2>Rewards Store</h2>
+    <p>Redeem your hard-earned points for payouts (500,000 pts = $1.00).</p>
+    <div id="rewardsAuthWall" class="auth-wall">
+      <h4>Account Required</h4>
+      <p>Sign in to view the rewards store and redeem your points.</p>
+      <button class="btn btn-primary" onclick="CC.openAuthModal()" style="max-width:280px;margin:0 auto">Create Account / Sign In</button>
+    </div>
+    <div id="rewardsGrid" class="store-grid hidden">
+      <div class="store-item">
+        <svg class="store-icon" viewBox="0 0 24 24" fill="none" stroke="#f4d03f" stroke-width="1.5"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20M7 15h.01M17 15h.01"/></svg>
+        <h4>Roblox 20 SAR Gift Card</h4>
+        <div class="usd-val">20 SAR (~$5.33 USD)</div>
+        <div class="pts-cost">2,665,000 Points</div>
+        <button class="btn btn-secondary btn-sm" onclick="CC.redeemStoreItem('Roblox 20 SAR Gift Card',2665000)">Redeem</button>
+      </div>
+      <div class="store-item">
+        <svg class="store-icon" viewBox="0 0 24 24" fill="none" stroke="#f4d03f" stroke-width="1.5"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M2 10h20M7 15h.01M17 15h.01"/></svg>
+        <h4>Visa Prepaid Card</h4>
+        <div class="usd-val">$10.00 USD</div>
+        <div class="pts-cost">5,000,000 Points</div>
+        <button class="btn btn-secondary btn-sm" onclick="CC.redeemStoreItem('Visa Prepaid Card $10',5000000)">Redeem</button>
+      </div>
+      <div class="store-item">
+        <svg class="store-icon" viewBox="0 0 24 24" fill="none" stroke="#f4d03f" stroke-width="1.5"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+        <h4>PayPal Cash</h4>
+        <div class="usd-val">$10.00 USD</div>
+        <div class="pts-cost">5,000,000 Points</div>
+        <button class="btn btn-secondary btn-sm" onclick="CC.redeemStoreItem('PayPal Cash $10',5000000)">Redeem</button>
+      </div>
+      <div class="store-item">
+        <svg class="store-icon" viewBox="0 0 24 24" fill="none" stroke="#f4d03f" stroke-width="1.5"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M2 10h20M7 15h.01M17 15h.01"/></svg>
+        <h4>Visa Prepaid Card</h4>
+        <div class="usd-val">$25.00 USD</div>
+        <div class="pts-cost">12,500,000 Points</div>
+        <button class="btn btn-secondary btn-sm" onclick="CC.redeemStoreItem('Visa Prepaid Card $25',12500000)">Redeem</button>
+      </div>
+    </div>
+    <div id="customClaimWrap" class="hidden" style="margin-top:25px;text-align:center">
+      <button class="btn btn-primary" onclick="CC.openCustomClaimModal()">Custom Points Payout Claim</button>
+      <button class="btn btn-secondary" style="margin-top:10px" onclick="CC.openClaimsModal()">My Claim History</button>
+    </div>
+  </section>
+
+  <section id="proofs" class="card">
+    <h2>Payment Proofs</h2>
+    <p>Real users, real payouts. Recently approved redemptions from the CrownCash community.</p>
+    <div id="proofsGrid" class="proof-grid">
+      <div class="proof-card"><div class="proof-amount">Loading...</div></div>
+    </div>
+  </section>
+
+  <section id="leaderboard" class="card">
+    <h2>Live Leaderboard</h2>
+    <p>Live database records ranked by point balances.</p>
+    <div id="leaderboardAuthWall" class="auth-wall">
+      <h4>Account Required</h4>
+      <p>Sign in to view the live leaderboard and see where you rank.</p>
+      <button class="btn btn-primary" onclick="CC.openAuthModal()" style="max-width:280px;margin:0 auto">Create Account / Sign In</button>
+    </div>
+    <div id="leaderboardContent" class="hidden">
+      <div style="overflow-x:auto">
+        <table class="leaderboard-table">
+          <thead><tr><th>Rank</th><th>User Profile</th><th>Points</th><th>USD Value</th></tr></thead>
+          <tbody id="leaderboardBody"><tr><td colspan="4" style="text-align:center;color:var(--cream-dim);padding:30px">Loading leaderboard...</td></tr></tbody>
+        </table>
+      </div>
+      <p style="font-size:.75rem;color:var(--cream-dim);margin-top:15px;text-align:center">Grind hard to make it onto the global leaderboard.</p>
+    </div>
+  </section>
+  <footer>
+    <p>&copy; 2026 CrownCash. Server Powered. 500,000 Points = $1.00 USD.</p>
+    <p>Extreme Hardcore Economy Active.</p>
+  </footer>
+</div>
+
+<div class="modal-overlay" id="authModal">
+  <div class="modal">
+    <h3 id="authTitle">Welcome to CrownCash</h3>
+    <p>Create an account or sign in to start earning.</p>
+    <div class="auth-tabs">
+      <div class="auth-tab active" id="tabRegister" onclick="CC.switchAuthTab('register')">Register</div>
+      <div class="auth-tab" id="tabLogin" onclick="CC.switchAuthTab('login')">Sign In</div>
+    </div>
+    <div id="registerForm">
+      <div class="form-group"><label>Username</label><input type="text" id="regUsername" placeholder="Choose a username" maxlength="20"></div>
+      <div class="form-group"><label>Email</label><input type="email" id="regEmail" placeholder="your@email.com"></div>
+      <div class="form-group"><label>Password</label><input type="password" id="regPassword" placeholder="Min 6 characters"></div>
+      <button class="btn btn-primary" id="regBtn" onclick="CC.handleRegister()">Create Account</button>
+    </div>
+    <div id="loginForm" class="hidden">
+      <div class="form-group"><label>Email</label><input type="email" id="loginEmail" placeholder="your@email.com"></div>
+      <div class="form-group"><label>Password</label><input type="password" id="loginPassword" placeholder="Your password"></div>
+      <button class="btn btn-primary" id="loginBtn" onclick="CC.handleLogin()">Sign In</button>
+    </div>
+    <button class="btn btn-secondary" style="margin-top:10px" onclick="CC.closeAuthModal()">Cancel</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="claimModal">
+  <div class="modal">
+    <h3>Custom Points Claim</h3>
+    <p>Claim using your available points balance! (Min. 500,000 pts = $1.00 USD)</p>
+    <div class="form-group"><label>Points to Redeem</label><input type="number" id="claimPointsInput" min="500000" step="50000" placeholder="Min. 500,000 points" oninput="CC.calcModalUsd()"></div>
+    <div style="background:rgba(46,204,113,.06);border:1px solid rgba(46,204,113,.2);border-radius:10px;padding:12px;margin-bottom:18px;text-align:center">
+      <div style="font-size:.75rem;color:var(--emerald-dark);text-transform:uppercase;letter-spacing:1px">You Will Receive</div>
+      <div style="font-family:'Cinzel',serif;font-size:1.6rem;font-weight:700;color:var(--emerald);margin-top:4px" id="modalUsdPreview">$0.00 USD</div>
+    </div>
+    <div class="form-group"><label>Payout Destination / Email</label><input type="text" id="claimAccountInput" placeholder="your-email@example.com"></div>
+    <button class="btn btn-primary" id="claimBtn" onclick="CC.submitCustomClaim()">Confirm Claim</button>
+    <button class="btn btn-secondary" style="margin-top:10px" onclick="CC.closeCustomClaimModal()">Cancel</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="claimsHistoryModal">
+  <div class="modal wide">
+    <div class="modal-header">
+      <h3>My Claim History</h3>
+      <button class="btn btn-secondary btn-sm" onclick="CC.closeClaimsModal()">Close</button>
+    </div>
+    <div class="modal-body">
+      <div style="overflow-x:auto">
+        <table class="claims-table">
+          <thead><tr><th>Date</th><th>Item</th><th>Points</th><th>USD</th><th>Status</th></tr></thead>
+          <tbody id="claimsHistoryBody"><tr><td colspan="5" style="text-align:center;color:var(--cream-dim);padding:30px">Loading...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="triviaModal">
+  <div class="modal">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px">
+      <h3 id="triviaHeader" style="margin:0">Daily 20-Q Trivia</h3>
+      <span id="triviaProgress" style="font-size:.85rem;color:var(--gold-light);font-weight:600">Q 1/20</span>
+    </div>
+    <p id="triviaQuestionText" style="font-size:1rem;color:var(--cream);min-height:50px;margin-bottom:20px">Loading question...</p>
+    <div class="trivia-options" id="triviaOptionsContainer"></div>
+    <button class="btn btn-secondary" onclick="CC.closeTriviaModal()">Exit Quiz</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="pollmaticModal">
+  <div class="modal wide">
+    <div class="modal-header">
+      <h3>Pollmatic.io Offerwall</h3>
+      <button class="btn btn-secondary btn-sm" onclick="CC.closePollmaticModal()">Close</button>
+    </div>
+    <div class="modal-body">
+      <p style="margin-bottom:15px;font-size:.85rem">Complete real surveys &amp; offers. Rewards credited via server postback. <span style="color:var(--gold-light);font-weight:600">Your ID: <span id="pollmaticUserIdDisplay">--</span></span></p>
+      <div class="pollmatic-iframe-wrap"><iframe id="pollmaticIframe" scrolling="yes" frameborder="0"></iframe></div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="myleadModal">
+  <div class="modal wide">
+    <div class="modal-header">
+      <h3>MyLead Offerwall</h3>
+      <button class="btn btn-secondary btn-sm" onclick="CC.closeMyleadModal()">Close</button>
+    </div>
+    <div class="modal-body">
+      <p style="margin-bottom:15px;font-size:.85rem">4,000+ incent campaigns. Complete offers to earn points. <span style="color:var(--gold-light);font-weight:600">Your ID: <span id="myleadUserIdDisplay">--</span></span></p>
+      <div class="mylead-iframe-wrap"><iframe id="myleadIframe" scrolling="yes" frameborder="0"></iframe></div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="frenzyModal">
+  <div class="modal" style="max-width:440px">
+    <h3>Coin Frenzy Minigame</h3>
+    <p id="frenzyStatusText" style="font-size:.85rem;margin-bottom:15px">Collect 25 gold coins while dodging fast red hazards!</p>
+    <div style="background:#05020a;border:1px solid rgba(212,175,55,.3);border-radius:12px;overflow:hidden;margin-bottom:15px;position:relative">
+      <canvas id="frenzyCanvas" width="380" height="240" style="display:block;margin:0 auto;cursor:crosshair"></canvas>
+    </div>
+    <button class="btn btn-primary" id="frenzyStartBtn" onclick="CC.startFrenzyGame()">Start Game</button>
+    <button class="btn btn-secondary" style="margin-top:10px" onclick="CC.closeFrenzyModal()">Close</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="spinModal">
+  <div class="modal">
+    <h3>Lucky Spin Wheel</h3>
+    <p style="font-size:.85rem">Spin once per day for a chance to win up to 5,000 points!</p>
+    <div class="wheel-container">
+      <canvas id="spinCanvas" class="wheel-canvas" width="280" height="280"></canvas>
+      <div class="wheel-pointer"></div>
+    </div>
+    <div class="wheel-result" id="spinResult"></div>
+    <button class="btn btn-primary" id="spinActionBtn" onclick="CC.spinWheel()">Spin Now</button>
+    <button class="btn btn-secondary" style="margin-top:10px" onclick="CC.closeSpinModal()">Close</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+<button class="debug-toggle" id="debugToggle" onclick="CC.toggleDebug()" title="Debug Console">DBG</button>
+<div class="debug-panel" id="debugPanel">
+  <div class="debug-header"><span>Debug Console</span><button onclick="CC.clearDebug()">Clear</button></div>
+  <div class="debug-logs" id="debugLogs"></div>
+  <div class="debug-status" id="debugStatus">
+    <span><span class="dot" id="dbDot"></span>DB</span>
+    <span><span class="dot" id="authDot"></span>Auth</span>
+    <span id="debugUser">User: --</span>
+    <span id="debugPoints">Pts: --</span>
+  </div>
+</div><script>
 (function(){
 'use strict';
 
@@ -58,13 +499,893 @@ function debugLog(msg, type){
   renderDebug();
 }
 
-/* many functions omitted here in the snippet; the full original file content is used in the commit */
+function renderDebug(){
+  var container = document.getElementById('debugLogs');
+  if(!container) return;
+  var html = '';
+  for(var i = 0; i < debugLogs.length; i++){
+    var e = debugLogs[i];
+    html += '<div class="log-entry log-' + e.type + '"><span class="timestamp">' + e.t + '</span>' + escapeHtml(String(e.msg)) + '</div>';
+  }
+  container.innerHTML = html;
+  container.scrollTop = container.scrollHeight;
+}
+
+function updateDebugStatus(){
+  var dbDot = document.getElementById('dbDot');
+  var authDot = document.getElementById('authDot');
+  var userSpan = document.getElementById('debugUser');
+  var ptsSpan = document.getElementById('debugPoints');
+  if(dbDot) dbDot.className = 'dot' + (supabaseClient ? ' ok' : '');
+  if(authDot) authDot.className = 'dot' + (currentUser ? ' ok' : '');
+  if(userSpan) userSpan.textContent = 'User: ' + (userProfile ? userProfile.username : '--');
+  if(ptsSpan) ptsSpan.textContent = 'Pts: ' + (userProfile ? userProfile.points.toLocaleString() : '--');
+}
+
+function toggleDebug(){
+  debugEnabled = !debugEnabled;
+  var panel = document.getElementById('debugPanel');
+  var btn = document.getElementById('debugToggle');
+  if(panel) panel.classList.toggle('active', debugEnabled);
+  if(btn) btn.classList.toggle('active', debugEnabled);
+}
+
+function clearDebug(){
+  debugLogs = [];
+  renderDebug();
+}
+
+function escapeHtml(str){
+  if(!str) return '';
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function showToast(msg, type){
+  type = type || 'info';
+  var toast = document.getElementById('toast');
+  if(!toast) return;
+  toast.textContent = msg;
+  toast.className = 'toast ' + type;
+  setTimeout(function(){ toast.classList.add('show'); }, 10);
+  setTimeout(function(){ toast.classList.remove('show'); }, 3500);
+}
+
+function hideSessionCheck(){
+  if(!securityCheckComplete) return;
+  var el = document.getElementById('sessionCheck');
+  if(el) el.classList.add('hidden');
+}
+
+function checkAuthRateLimit(){
+  var now = Date.now();
+  authAttempts = authAttempts.filter(function(t){ return now - t < 60000; });
+  if(authAttempts.length >= 5){
+    showToast('Too many attempts. Wait 1 minute.', 'error');
+    return false;
+  }
+  authAttempts.push(now);
+  return true;
+}
+
+function checkCooldowns(){
+  if(!userProfile) return;
+  var now = Date.now();
+  var dailyCd = 24 * 60 * 60 * 1000;
+  var triviaCd = 12 * 60 * 60 * 1000;
+  var frenzyCd = 12 * 60 * 60 * 1000;
+  var spinCd = 24 * 60 * 60 * 1000;
+
+  var dailyBtn = document.getElementById('dailyBtn');
+  if(dailyBtn){
+    if(userProfile.last_daily && (now - new Date(userProfile.last_daily).getTime() < dailyCd)){
+      dailyBtn.disabled = true; dailyBtn.textContent = 'Claimed';
+    } else { dailyBtn.disabled = false; dailyBtn.textContent = 'Claim Daily'; }
+  }
+  var triviaBtn = document.getElementById('triviaBtn');
+  if(triviaBtn){
+    if(userProfile.last_trivia && (now - new Date(userProfile.last_trivia).getTime() < triviaCd)){
+      triviaBtn.disabled = true; triviaBtn.textContent = 'On Cooldown';
+    } else { triviaBtn.disabled = false; triviaBtn.textContent = 'Start Trivia'; }
+  }
+  var frenzyBtn = document.getElementById('frenzyBtn');
+  if(frenzyBtn){
+    if(userProfile.last_frenzy && (now - new Date(userProfile.last_frenzy).getTime() < frenzyCd)){
+      frenzyBtn.disabled = true; frenzyBtn.textContent = 'On Cooldown';
+    } else { frenzyBtn.disabled = false; frenzyBtn.textContent = 'Play Now'; }
+  }
+  var spinBtn = document.getElementById('spinBtn');
+  if(spinBtn){
+    if(userProfile.spin_last_date && (now - new Date(userProfile.spin_last_date).getTime() < spinCd)){
+      spinBtn.disabled = true; spinBtn.textContent = 'Spun Today';
+    } else { spinBtn.disabled = false; spinBtn.textContent = 'Spin Wheel'; }
+  }
+}
+
+var origLog = console.log;
+var origWarn = console.warn;
+var origError = console.error;
+var origInfo = console.info;
+console.log = function(){ var args = Array.prototype.slice.call(arguments); debugLog(args.join(' '), 'info'); origLog.apply(console, args); };
+console.warn = function(){ var args = Array.prototype.slice.call(arguments); debugLog(args.join(' '), 'warn'); origWarn.apply(console, args); };
+console.error = function(){ var args = Array.prototype.slice.call(arguments); debugLog(args.join(' '), 'error'); origError.apply(console, args); };
+console.info = function(){ var args = Array.prototype.slice.call(arguments); debugLog(args.join(' '), 'info'); origInfo.apply(console, args); };
+
+var supabaseClient = null;
+var currentUser = null;
+var userProfile = null;
+var dbReady = false;
+
+var triviaQuestions = [
+  {q:"What is the capital of France?",opts:["Berlin","Madrid","Paris","Rome"],a:2},
+  {q:"Which programming language is known for web scripting and client-side logic?",opts:["Python","JavaScript","C++","Java"],a:1},
+  {q:"What is 12 multiplied by 12?",opts:["144","124","132","154"],a:0},
+  {q:"Which planet is known as the Red Planet?",opts:["Venus","Jupiter","Mars","Saturn"],a:2},
+  {q:"What is the chemical symbol for Gold?",opts:["Ag","Au","Pb","Fe"],a:1},
+  {q:"Who wrote 'Romeo and Juliet'?",opts:["Charles Dickens","William Shakespeare","Mark Twain","Jane Austen"],a:1},
+  {q:"How many bits are in a single byte?",opts:["4","8","16","32"],a:1},
+  {q:"What is the largest ocean on Earth?",opts:["Atlantic Ocean","Indian Ocean","Arctic Ocean","Pacific Ocean"],a:3},
+  {q:"In which year did the World Wide Web launch to the public?",opts:["1985","1991","1995","2001"],a:1},
+  {q:"What is the square root of 225?",opts:["13","14","15","16"],a:2},
+  {q:"Which element has the atomic number 1?",opts:["Helium","Hydrogen","Oxygen","Carbon"],a:1},
+  {q:"What is the hardest natural substance on Earth?",opts:["Gold","Iron","Diamond","Platinum"],a:2},
+  {q:"Which continent is the Sahara Desert located in?",opts:["Asia","Australia","Africa","South America"],a:2},
+  {q:"What does HTML stand for?",opts:["HyperText Markup Language","High Tech Multi Language","Hyperlink Text Management Logic","Home Tool Markup Language"],a:0},
+  {q:"How many bones are in the adult human body?",opts:["180","206","235","270"],a:1},
+  {q:"What is the fastest land animal?",opts:["Lion","Cheetah","Horse","Pronghorn"],a:1},
+  {q:"Which country gifted the Statue of Liberty to the USA?",opts:["United Kingdom","France","Spain","Italy"],a:1},
+  {q:"What is the main component of the sun?",opts:["Liquid magma","Hydrogen and Helium","Solid iron","Carbon dioxide"],a:1},
+  {q:"Which protocol is securely used for encrypted web traffic?",opts:["HTTP","FTP","HTTPS","SMTP"],a:2},
+  {q:"What is the boiling point of water in Celsius?",opts:["90C","100C","110C","120C"],a:1}
+];
+var currentTriviaIdx = 0;
+var triviaScoreCount = 0;
+var frenzyRunning = false, frenzyAnimId = null, frenzyCtx = null;
+var playerX = 190, playerY = 120, coinsCollected = 0;
+var gameObjects = [], keys = {};
+
+var spinSegments = [
+  {label:'100',value:100,color:'#b8860b'},
+  {label:'200',value:200,color:'#d4af37'},
+  {label:'500',value:500,color:'#27ae60'},
+  {label:'1000',value:1000,color:'#2980b9'},
+  {label:'2000',value:2000,color:'#8e44ad'},
+  {label:'5000',value:5000,color:'#c0392b'},
+  {label:'100',value:100,color:'#b8860b'},
+  {label:'200',value:200,color:'#d4af37'}
+];
+var spinAngle = 0, spinVelocity = 0, spinAnimating = false;
+
+function showSecurityBlock(reason){
+  securityBlocked = true;
+  var overlay = document.getElementById('securityBlock');
+  var reasonEl = document.getElementById('securityReason');
+  var sessionCheck = document.getElementById('sessionCheck');
+  if(overlay) overlay.style.display = 'flex';
+  if(reasonEl) reasonEl.textContent = reason;
+  document.body.style.overflow = 'hidden';
+  var navbar = document.querySelector('.navbar');
+  var container = document.querySelector('.container');
+  if(navbar) navbar.style.display = 'none';
+  if(container) container.style.display = 'none';
+  if(sessionCheck) sessionCheck.classList.add('hidden');
+}
+
+async function runSecurityCheck(){
+  try {
+    console.log('=== SECURITY CHECK START ===');
+    var controller = new AbortController();
+    var timeoutId = setTimeout(function(){ controller.abort(); }, 3000);
+    var res = await fetch(SUPABASE_URL + '/functions/v1/check-security', {signal: controller.signal});
+    clearTimeout(timeoutId);
+    console.log('Response status:', res.status);
+    if(!res.ok){
+      console.log('Security check returned status ' + res.status + ', allowing');
+      return true;
+    }
+    var data = await res.json();
+    console.log('Security check response:', JSON.stringify(data));
+    if(data.allowed === false && data.reason){
+      console.log('BLOCKED by server:', data.reason);
+      showSecurityBlock(data.reason);
+      return false;
+    }
+    console.log('PASSED security check');
+    return true;
+  } catch(e) {
+    console.log('Security check error:', e.message);
+    return true;
+  }
+}
+
+async function detectIP(){
+  try {
+    var res = await fetch('http://ip-api.com/json/?fields=status,query', {signal: AbortSignal.timeout(2000)});
+    var data = await res.json();
+    if(data.status === 'success') userIP = data.query;
+  } catch(e){ userIP = 'unknown'; }
+}
+
+function generateFingerprint(){
+  var canvas = document.createElement('canvas');
+  var ctx = canvas.getContext('2d');
+  ctx.textBaseline = 'top';
+  ctx.font = '14px Arial';
+  ctx.fillText('CrownCash FP ' + navigator.userAgent + ' ' + screen.width + 'x' + screen.height, 2, 2);
+  var fp = canvas.toDataURL().slice(-32);
+  var hash = 0;
+  for(var i = 0; i < fp.length; i++){
+    hash = ((hash << 5) - hash) + fp.charCodeAt(i);
+    hash |= 0;
+  }
+  return Math.abs(hash).toString(16);
+}
+
+async function checkMultiAccount(){
+  if(!supabaseClient || !currentUser || !userProfile) return;
+  try {
+    var res = await supabaseClient.from('profiles').select('id,username').eq('ip_address', userIP).neq('id', currentUser.id);
+    if(res.data && res.data.length >= 2){
+      var flag = 'Multi-account: ' + res.data.length + ' accounts on IP ' + userIP;
+      debugLog(flag, 'warn');
+      var banner = document.getElementById('fraudBanner');
+      if(banner) banner.classList.add('active');
+      await supabaseClient.from('profiles').update({fraud_flags: JSON.stringify({ip_duplicates: res.data.map(function(u){return u.username;}), detected_at: new Date().toISOString()})}).eq('id', currentUser.id);
+    }
+  } catch(e){ debugLog('Multi-account check error: ' + e.message, 'error'); }
+}
+
+function initSupabase(){
+  try {
+    if(typeof window.supabase !== 'undefined' && window.supabase.createClient){
+      supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      dbReady = true;
+      debugLog('Supabase client initialized', 'success');
+      supabaseClient.auth.onAuthStateChange(function(event, session){
+        debugLog('Auth state: ' + event, 'auth');
+        if(event === 'SIGNED_IN' && session && session.user){
+          currentUser = session.user;
+          loadUserProfile(currentUser.id);
+        } else if(event === 'SIGNED_OUT'){
+          currentUser = null; userProfile = null;
+          updateAuthUI(); hideSessionCheck();
+        } else if(event === 'INITIAL_SESSION'){
+          if(session && session.user){
+            currentUser = session.user;
+            loadUserProfile(currentUser.id);
+          } else { updateAuthUI(); hideSessionCheck(); }
+        }
+      });
+      supabaseClient.auth.getSession().then(function(result){
+        if(result.data && result.data.session){
+          currentUser = result.data.session.user;
+          debugLog('Existing session found: ' + currentUser.email, 'auth');
+          loadUserProfile(currentUser.id);
+        } else { debugLog('No existing session', 'info'); updateAuthUI(); hideSessionCheck(); }
+      }).catch(function(err){
+        debugLog('getSession error: ' + err.message, 'error');
+        updateAuthUI(); hideSessionCheck();
+      });
+    } else {
+      debugLog('Supabase library not loaded', 'error');
+      showToast('Backend connection unavailable.', 'error');
+      updateAuthUI(); hideSessionCheck();
+    }
+  } catch(err){
+    debugLog('Supabase init error: ' + err.message, 'error');
+    showToast('Failed to connect to server.', 'error');
+    updateAuthUI(); hideSessionCheck();
+  }
+}
 
 function generateReferralCode(){
   var chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
   var code = '';
   for(var i = 0; i < 8; i++) code += chars.charAt(Math.floor(Math.random() * chars.length));
   return code;
+}
+
+function updateAuthUI(){
+  var navState = document.getElementById('navAuthState');
+  var earnWall = document.getElementById('earnAuthWall');
+  var earnGrid = document.getElementById('earnGrid');
+  var rewardsWall = document.getElementById('rewardsAuthWall');
+  var rewardsGrid = document.getElementById('rewardsGrid');
+  var customWrap = document.getElementById('customClaimWrap');
+  var lbWall = document.getElementById('leaderboardAuthWall');
+  var lbContent = document.getElementById('leaderboardContent');
+  var notifBell = document.getElementById('notifBell');
+
+  if(currentUser && userProfile){
+    var streakHtml = userProfile.login_streak > 1 ? ' <span class="streak-badge">' + userProfile.login_streak + ' Day Streak</span>' : '';
+    if(navState) navState.innerHTML = '<span class="pts">' + userProfile.points.toLocaleString() + ' pts</span> <span style="color:var(--cream-dim)">' + escapeHtml(userProfile.username) + '</span>' + streakHtml + ' <button class="btn btn-secondary btn-sm" onclick="CC.handleLogout()">Logout</button>';
+    if(earnWall) earnWall.classList.add('hidden');
+    if(earnGrid) earnGrid.classList.remove('hidden');
+    if(rewardsWall) rewardsWall.classList.add('hidden');
+    if(rewardsGrid) rewardsGrid.classList.remove('hidden');
+    if(customWrap) customWrap.classList.remove('hidden');
+    if(lbWall) lbWall.classList.add('hidden');
+    if(lbContent) lbContent.classList.remove('hidden');
+    if(notifBell) notifBell.classList.remove('hidden');
+    checkCooldowns();
+    updateReferralUI();
+    loadNotifications();
+  } else {
+    if(navState) navState.innerHTML = '<button class="btn btn-primary btn-sm" onclick="CC.openAuthModal()">Sign In</button>';
+    if(earnWall) earnWall.classList.remove('hidden');
+    if(earnGrid) earnGrid.classList.add('hidden');
+    if(rewardsWall) rewardsWall.classList.remove('hidden');
+    if(rewardsGrid) rewardsGrid.classList.add('hidden');
+    if(customWrap) customWrap.classList.add('hidden');
+    if(lbWall) lbWall.classList.remove('hidden');
+    if(lbContent) lbContent.classList.add('hidden');
+    if(notifBell) notifBell.classList.add('hidden');
+  }
+  updateDebugStatus();
+}
+
+async function loadUserProfile(userId){
+  if(!supabaseClient || !userId){ hideSessionCheck(); return; }
+  debugLog('Loading profile for ' + userId, 'db');
+  try {
+    var sessRes = await supabaseClient.auth.getSession();
+    debugLog('Session check: ' + (sessRes.data.session ? 'active' : 'none'), 'auth');
+    var res = await supabaseClient.from('profiles').select('*').eq('id', userId).single();
+    if(res.error && res.error.code === 'PGRST116'){
+      debugLog('Profile not found, creating...', 'db');
+      var username = currentUser.user_metadata && currentUser.user_metadata.username ? currentUser.user_metadata.username : 'Player';
+      var pollmaticId = 'cc_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now();
+      var refCode = generateReferralCode();
+      var urlParams = new URLSearchParams(window.location.search);
+      var referredBy = urlParams.get('ref') || null;
+      debugLog('Attempting insert with id=' + userId + ', username=' + username, 'db');
+      var insertData = {
+        id: userId, username: username, points: 0, pollmatic_id: pollmaticId,
+        referral_code: refCode, referred_by: referredBy, login_streak: 1,
+        last_login_date: new Date().toISOString(), ip_address: userIP,
+        fingerprint_hash: userFingerprint, banned: false
+      };
+      var insertRes = await supabaseClient.from('profiles').insert(insertData).select();
+      if(insertRes.error){
+        debugLog('Insert failed: ' + insertRes.error.message, 'error');
+        debugLog('Error code: ' + (insertRes.error.code || 'none'), 'error');
+        await new Promise(function(r){ setTimeout(r, 500); });
+        res = await supabaseClient.from('profiles').select('*').eq('id', userId).maybeSingle();
+        if(res.data){ userProfile = res.data; debugLog('Profile found after delay', 'success'); }
+        else { showToast('Error creating profile. Please refresh and try again.', 'error'); hideSessionCheck(); return; }
+      } else {
+        userProfile = insertRes.data[0];
+        debugLog('Profile created: ' + username + ' | 0 pts | ref=' + refCode, 'success');
+        if(referredBy) showToast('Referral code applied! Start earning to help your referrer.', 'success');
+      }
+    } else if(res.error){
+      debugLog('Profile load error: ' + res.error.message, 'error');
+      showToast('Error loading profile.', 'error');
+      hideSessionCheck(); return;
+    } else {
+      userProfile = res.data;
+      debugLog('Profile loaded: ' + userProfile.username + ' | ' + userProfile.points + ' pts', 'db');
+      await processLoginStreak();
+      try { await supabaseClient.from('profiles').update({ip_address: userIP, fingerprint_hash: userFingerprint}).eq('id', userId); } catch(e){}
+    }
+    updateAuthUI();
+    renderLeaderboard();
+    updateSystemStats();
+    loadPaymentProofs();
+    checkMultiAccount();
+    hideSessionCheck();
+  } catch(err){
+    debugLog('loadUserProfile exception: ' + err.message, 'error');
+    hideSessionCheck();
+  }
+}
+
+async function processLoginStreak(){
+  if(!userProfile) return;
+  var now = new Date();
+  var lastLogin = userProfile.last_login_date ? new Date(userProfile.last_login_date) : null;
+  var streak = userProfile.login_streak || 1;
+  var hoursSince = lastLogin ? (now - lastLogin) / (1000 * 60 * 60) : 999;
+  if(hoursSince >= 24 && hoursSince < 48){
+    streak = Math.min(streak + 1, 30);
+    var reward = Math.min(500 + (streak - 1) * 250, 5000);
+    await addPoints(reward, 'streak');
+    await supabaseClient.from('profiles').update({login_streak: streak, last_login_date: now.toISOString()}).eq('id', userProfile.id);
+    userProfile.login_streak = streak;
+    userProfile.last_login_date = now.toISOString();
+    showToast('Day ' + streak + ' streak! +' + reward + ' bonus points!', 'success');
+    await createNotification('Streak Bonus', 'You earned ' + reward + ' points for your ' + streak + '-day login streak!');
+  } else if(hoursSince >= 48){
+    streak = 1;
+    await supabaseClient.from('profiles').update({login_streak: streak, last_login_date: now.toISOString()}).eq('id', userProfile.id);
+    userProfile.login_streak = streak;
+    userProfile.last_login_date = now.toISOString();
+    showToast('Streak reset. Day 1 started!', 'info');
+  } else if(!lastLogin){
+    await supabaseClient.from('profiles').update({login_streak: 1, last_login_date: now.toISOString()}).eq('id', userProfile.id);
+    userProfile.login_streak = 1;
+    userProfile.last_login_date = now.toISOString();
+  }
+}
+
+async function addPoints(amount, source){
+  if(!userProfile || !supabaseClient) return false;
+  var newPoints = userProfile.points + amount;
+  debugLog('Adding ' + amount + ' pts (new total: ' + newPoints + ')', 'db');
+  var res = await supabaseClient.from('profiles').update({points: newPoints}).eq('id', userProfile.id).select().single();
+  if(res.error){ debugLog('addPoints failed: ' + res.error.message, 'error'); showToast('Server sync failed.', 'error'); return false; }
+  userProfile = res.data;
+  updateAuthUI();
+  if(amount > 0 && userProfile.referred_by){
+    try {
+      var refRes = await supabaseClient.from('profiles').select('id,points').eq('referral_code', userProfile.referred_by).single();
+      if(refRes.data){
+        var commission = Math.floor(amount * 0.1);
+        if(commission > 0){
+          await supabaseClient.from('profiles').update({points: refRes.data.points + commission}).eq('id', refRes.data.id);
+          await supabaseClient.from('referral_earnings').insert({referrer_id: refRes.data.id, referred_id: userProfile.id, amount: commission, source: source || 'general'});
+          debugLog('Referral commission: ' + commission + ' pts to ' + userProfile.referred_by, 'success');
+        }
+      }
+    } catch(e){ debugLog('Referral commission error: ' + e.message, 'warn'); }
+  }
+  return true;
+}
+
+async function updateProfileField(field, value){
+  if(!userProfile || !supabaseClient) return false;
+  var update = {}; update[field] = value;
+  debugLog('Updating ' + field, 'db');
+  var res = await supabaseClient.from('profiles').update(update).eq('id', userProfile.id).select().single();
+  if(res.error){ debugLog('Update failed: ' + res.error.message, 'error'); return false; }
+  userProfile = res.data;
+  return true;
+}async function handleRegister(){
+  if(securityBlocked) return;
+  if(!checkAuthRateLimit()) return;
+  if(mouseMoves < 10){ showToast('Please interact with the page normally.', 'error'); return; }
+  var username = document.getElementById('regUsername').value.trim();
+  var email = document.getElementById('regEmail').value.trim().toLowerCase();
+  var password = document.getElementById('regPassword').value;
+  var btn = document.getElementById('regBtn');
+  if(!username || username.length < 3){ showToast('Username must be at least 3 characters.', 'error'); return; }
+  if(!email || !email.includes('@')){ showToast('Please enter a valid email.', 'error'); return; }
+  if(!password || password.length < 6){ showToast('Password must be at least 6 characters.', 'error'); return; }
+  btn.disabled = true; btn.textContent = 'Creating...';
+  debugLog('Registering: ' + email, 'auth');
+  try {
+    var recaptchaToken = '';
+    try { if(typeof grecaptcha !== 'undefined' && grecaptcha.execute){ recaptchaToken = await grecaptcha.execute(RECAPTCHA_SITE_KEY, {action: 'register'}); debugLog('reCAPTCHA token received', 'info'); } }
+    catch(e){ debugLog('reCAPTCHA skipped: ' + e.message, 'warn'); }
+    var res = await supabaseClient.auth.signUp({email: email, password: password, options: {data: {username: username}}});
+    if(res.data && res.data.session){
+      debugLog('Signup success with session, user: ' + res.data.user.id, 'success');
+      currentUser = res.data.user;
+      await new Promise(function(r){ setTimeout(r, 200); });
+      await loadUserProfile(currentUser.id);
+      closeAuthModal();
+      showToast('Account created! Welcome, ' + username + '!', 'success');
+      btn.disabled = false; btn.textContent = 'Create Account';
+      return;
+    }
+    if(res.data && res.data.user && !res.data.session){
+      debugLog('Signup success but no session, auto-logging in...', 'auth');
+      var loginRes = await supabaseClient.auth.signInWithPassword({email: email, password: password});
+      if(loginRes.error){
+        debugLog('Auto-login failed: ' + loginRes.error.message, 'error');
+        if(loginRes.error.message.indexOf('Email not confirmed') !== -1 || loginRes.error.message.indexOf('not confirmed') !== -1){
+          showToast('Email confirmation is still ON in Supabase. Go to Dashboard -> Auth -> Email -> Confirm email = OFF', 'error');
+        } else {
+          showToast('Account exists but password is wrong. Use Sign In tab.', 'error');
+          switchAuthTab('login');
+          document.getElementById('loginEmail').value = email;
+          document.getElementById('loginPassword').value = '';
+          document.getElementById('loginPassword').focus();
+        }
+        btn.disabled = false; btn.textContent = 'Create Account';
+        return;
+      }
+      if(loginRes.data && loginRes.data.session){
+        currentUser = loginRes.data.user;
+        debugLog('Auto-login success', 'success');
+        await new Promise(function(r){ setTimeout(r, 200); });
+        await loadUserProfile(currentUser.id);
+        closeAuthModal();
+        showToast('Account created! Welcome, ' + username + '!', 'success');
+        btn.disabled = false; btn.textContent = 'Create Account';
+        return;
+      }
+    }
+    if(res.error){
+      debugLog('Register error: ' + res.error.message, 'error');
+      if(res.error.message && res.error.message.toLowerCase().indexOf('already') !== -1){
+        debugLog('User exists, trying login instead...', 'auth');
+        var loginRes = await supabaseClient.auth.signInWithPassword({email: email, password: password});
+        if(loginRes.data && loginRes.data.session){
+          currentUser = loginRes.data.user;
+          debugLog('Login success (existing user)', 'success');
+          await new Promise(function(r){ setTimeout(r, 200); });
+          await loadUserProfile(currentUser.id);
+          closeAuthModal();
+          showToast('Welcome back, ' + username + '!', 'success');
+          btn.disabled = false; btn.textContent = 'Create Account';
+          return;
+        }
+        if(loginRes.error){
+          debugLog('Login also failed: ' + loginRes.error.message, 'error');
+          showToast('This email is already registered with a different password. Use Sign In tab.', 'error');
+          switchAuthTab('login');
+          document.getElementById('loginEmail').value = email;
+          btn.disabled = false; btn.textContent = 'Create Account';
+          return;
+        }
+      }
+      showToast(res.error.message, 'error');
+    }
+  } catch(err){
+    debugLog('Register exception: ' + err.message, 'error');
+    showToast('Registration failed. Try again.', 'error');
+  }
+  btn.disabled = false; btn.textContent = 'Create Account';
+}
+
+async function handleLogin(){
+  if(securityBlocked) return;
+  if(!checkAuthRateLimit()) return;
+  if(mouseMoves < 10){ showToast('Please interact with the page normally.', 'error'); return; }
+  var email = document.getElementById('loginEmail').value.trim().toLowerCase();
+  var password = document.getElementById('loginPassword').value;
+  var btn = document.getElementById('loginBtn');
+  if(!email || !password){ showToast('Please enter email and password.', 'error'); return; }
+  btn.disabled = true; btn.textContent = 'Signing in...';
+  debugLog('Logging in: ' + email, 'auth');
+  try {
+    var res = await supabaseClient.auth.signInWithPassword({email: email, password: password});
+    if(res.data && res.data.session){
+      debugLog('Login success: ' + res.data.user.id, 'success');
+      currentUser = res.data.user;
+      await new Promise(function(r){ setTimeout(r, 200); });
+      await loadUserProfile(currentUser.id);
+      closeAuthModal();
+      showToast('Welcome back!', 'success');
+      btn.disabled = false; btn.textContent = 'Sign In';
+      return;
+    }
+    if(res.error){
+      debugLog('Login error: ' + res.error.message, 'error');
+      if(res.error.message === 'Invalid login credentials'){
+        showToast('Wrong password or account not found. Try Register tab to create/reset.', 'error');
+        switchAuthTab('register');
+        document.getElementById('regEmail').value = email;
+        document.getElementById('regPassword').value = password;
+        document.getElementById('regUsername').focus();
+      } else { showToast(res.error.message, 'error'); }
+    }
+  } catch(err){
+    debugLog('Login exception: ' + err.message, 'error');
+    showToast('Sign in failed. Try again.', 'error');
+  }
+  btn.disabled = false; btn.textContent = 'Sign In';
+}
+
+async function handleLogout(){
+  debugLog('Logging out...', 'auth');
+  await supabaseClient.auth.signOut();
+  currentUser = null; userProfile = null;
+  updateAuthUI();
+  showToast('Signed out successfully.', 'success');
+}
+
+function switchAuthTab(mode){
+  document.getElementById('tabRegister').className = 'auth-tab' + (mode === 'register' ? ' active' : '');
+  document.getElementById('tabLogin').className = 'auth-tab' + (mode === 'login' ? ' active' : '');
+  document.getElementById('registerForm').className = mode === 'register' ? '' : 'hidden';
+  document.getElementById('loginForm').className = mode === 'login' ? '' : 'hidden';
+  document.getElementById('authTitle').textContent = mode === 'register' ? 'Create Your Account' : 'Sign In';
+}
+
+function openAuthModal(){ switchAuthTab('register'); document.getElementById('authModal').classList.add('active'); }
+function closeAuthModal(){ document.getElementById('authModal').classList.remove('active'); }
+
+async function claimDaily(){
+  if(!currentUser || !userProfile){ showToast('Please sign in first.', 'error'); return; }
+  var now = new Date().toISOString();
+  var cooldown = 24 * 60 * 60 * 1000;
+  if(userProfile.last_daily && (Date.now() - new Date(userProfile.last_daily).getTime() < cooldown)){
+    showToast('Daily Reward already claimed within the last 24 hours!', 'error');
+    checkCooldowns(); return;
+  }
+  var ok = await addPoints(500, 'daily');
+  if(!ok) return;
+  await updateProfileField('last_daily', now);
+  showToast('Successfully claimed +500 Daily Points ($0.001)!', 'success');
+  await createNotification('Daily Reward', 'You claimed +500 daily points!');
+  checkCooldowns();
+}
+
+async function startTriviaModal(){
+  if(!currentUser || !userProfile){ showToast('Please sign in first.', 'error'); return; }
+  var cooldown = 12 * 60 * 60 * 1000;
+  if(userProfile.last_trivia && (Date.now() - new Date(userProfile.last_trivia).getTime() < cooldown)){
+    showToast('Trivia session completed recently! Try again later.', 'error'); return;
+  }
+  currentTriviaIdx = 0; triviaScoreCount = 0;
+  document.getElementById('triviaModal').classList.add('active');
+  loadTriviaQuestion();
+}
+
+function closeTriviaModal(){ document.getElementById('triviaModal').classList.remove('active'); }
+
+async function loadTriviaQuestion(){
+  if(currentTriviaIdx >= triviaQuestions.length){
+    await updateProfileField('last_trivia', new Date().toISOString());
+    await addPoints(1000, 'trivia');
+    closeTriviaModal();
+    showToast('Completed 20-Q Trivia! Earned +1,000 Points ($0.002).', 'success');
+    await createNotification('Trivia Complete', 'You earned +1,000 points for completing the trivia quiz!');
+    return;
+  }
+  var qObj = triviaQuestions[currentTriviaIdx];
+  document.getElementById('triviaProgress').textContent = 'Q ' + (currentTriviaIdx + 1) + '/20';
+  document.getElementById('triviaQuestionText').textContent = qObj.q;
+  var container = document.getElementById('triviaOptionsContainer');
+  container.innerHTML = '';
+  for(var i = 0; i < qObj.opts.length; i++){
+    (function(idx){
+      var btn = document.createElement('button');
+      btn.className = 'trivia-opt-btn';
+      btn.textContent = qObj.opts[idx];
+      btn.onclick = function(){
+        if(idx === qObj.a){ triviaScoreCount++; showToast('Correct!', 'success'); }
+        else { showToast('Incorrect! (No mercy)', 'error'); }
+        currentTriviaIdx++;
+        loadTriviaQuestion();
+      };
+      container.appendChild(btn);
+    })(i);
+  }
+}
+
+function startPollmaticModal(){
+  if(!currentUser || !userProfile){ showToast('Please sign in first.', 'error'); return; }
+  var uid = userProfile.pollmatic_id || userProfile.id;
+  document.getElementById('pollmaticUserIdDisplay').textContent = uid;
+  var iframe = document.getElementById('pollmaticIframe');
+  iframe.src = 'https://pollmatic.io/offerwall/' + encodeURIComponent(POLLMATIC_API_KEY) + '/' + encodeURIComponent(uid);
+  document.getElementById('pollmaticModal').classList.add('active');
+  debugLog('Pollmatic opened, uid=' + uid, 'info');
+}
+
+function closePollmaticModal(){
+  document.getElementById('pollmaticModal').classList.remove('active');
+  var iframe = document.getElementById('pollmaticIframe');
+  if(iframe) iframe.src = 'about:blank';
+}
+
+function startMyleadModal(){
+  if(!currentUser || !userProfile){ showToast('Please sign in first.', 'error'); return; }
+  var uid = userProfile.id;
+  document.getElementById('myleadUserIdDisplay').textContent = uid;
+  var iframe = document.getElementById('myleadIframe');
+  iframe.src = 'https://reward-me.eu/' + encodeURIComponent(MYLEAD_OFFERWALL_ID) + '?player_id=' + encodeURIComponent(uid) + '&ml_sub1=' + encodeURIComponent(uid);
+  document.getElementById('myleadModal').classList.add('active');
+  debugLog('MyLead opened, uid=' + uid, 'info');
+}
+
+function closeMyleadModal(){
+  document.getElementById('myleadModal').classList.remove('active');
+  var iframe = document.getElementById('myleadIframe');
+  if(iframe) iframe.src = 'about:blank';
+}
+
+async function startCoinFrenzyModal(){
+  if(!currentUser || !userProfile){ showToast('Please sign in first.', 'error'); return; }
+  var cooldown = 12 * 60 * 60 * 1000;
+  if(userProfile.last_frenzy && (Date.now() - new Date(userProfile.last_frenzy).getTime() < cooldown)){
+    showToast('Coin Frenzy already played today! Come back tomorrow.', 'error'); return;
+  }
+  document.getElementById('frenzyModal').classList.add('active');
+  var canvas = document.getElementById('frenzyCanvas');
+  frenzyCtx = canvas.getContext('2d');
+  coinsCollected = 0; frenzyRunning = false;
+  document.getElementById('frenzyStartBtn').style.display = 'block';
+  document.getElementById('frenzyStatusText').textContent = 'Collect 25 gold coins while dodging fast red hazards!';
+  frenzyCtx.fillStyle = '#05020a';
+  frenzyCtx.fillRect(0, 0, canvas.width, canvas.height);
+  frenzyCtx.fillStyle = '#f4d03f';
+  frenzyCtx.font = '14px Inter';
+  frenzyCtx.textAlign = 'center';
+  frenzyCtx.fillText('Click Start Game Below', canvas.width / 2, canvas.height / 2);
+}
+
+function closeFrenzyModal(){
+  frenzyRunning = false;
+  if(frenzyAnimId) cancelAnimationFrame(frenzyAnimId);
+  document.getElementById('frenzyModal').classList.remove('active');
+}
+
+function startFrenzyGame(){
+  document.getElementById('frenzyStartBtn').style.display = 'none';
+  coinsCollected = 0; playerX = 190; playerY = 120;
+  gameObjects = []; frenzyRunning = true;
+  for(var i = 0; i < 7; i++) spawnGameItem();
+  window.addEventListener('keydown', onKeyDown);
+  window.addEventListener('keyup', onKeyUp);
+  var canvas = document.getElementById('frenzyCanvas');
+  canvas.onmousemove = onMouseMove;
+  frenzyLoop();
+}
+
+function onKeyDown(e){ keys[e.key] = true; }
+function onKeyUp(e){ keys[e.key] = false; }
+function onMouseMove(e){
+  var rect = document.getElementById('frenzyCanvas').getBoundingClientRect();
+  playerX = e.clientX - rect.left;
+  playerY = e.clientY - rect.top;
+}
+
+function spawnGameItem(){
+  var canvas = document.getElementById('frenzyCanvas');
+  var isCoin = Math.random() > .45;
+  gameObjects.push({
+    x: Math.random() * (canvas.width - 30) + 15,
+    y: Math.random() * (canvas.height - 30) + 15,
+    vx: (Math.random() - .5) * 4,
+    vy: (Math.random() - .5) * 4,
+    type: isCoin ? 'coin' : 'hazard',
+    radius: isCoin ? 7 : 11
+  });
+}
+
+function frenzyLoop(){
+  if(!frenzyRunning) return;
+  var canvas = document.getElementById('frenzyCanvas');
+  var ctx = frenzyCtx;
+  if(keys['ArrowLeft'] || keys['a']) playerX -= 4;
+  if(keys['ArrowRight'] || keys['d']) playerX += 4;
+  if(keys['ArrowUp'] || keys['w']) playerY -= 4;
+  if(keys['ArrowDown'] || keys['s']) playerY += 4;
+  playerX = Math.max(12, Math.min(canvas.width - 12, playerX));
+  playerY = Math.max(12, Math.min(canvas.height - 12, playerY));
+  ctx.fillStyle = '#0d0418';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  for(var i = gameObjects.length - 1; i >= 0; i--){
+    var obj = gameObjects[i];
+    obj.x += obj.vx; obj.y += obj.vy;
+    if(obj.x < 10 || obj.x > canvas.width - 10) obj.vx *= -1;
+    if(obj.y < 10 || obj.y > canvas.height - 10) obj.vy *= -1;
+    ctx.beginPath();
+    ctx.arc(obj.x, obj.y, obj.radius, 0, Math.PI * 2);
+    ctx.fillStyle = obj.type === 'coin' ? '#f4d03f' : '#e74c3c';
+    ctx.fill();
+    ctx.closePath();
+    var dx = playerX - obj.x, dy = playerY - obj.y;
+    var dist = Math.sqrt(dx * dx + dy * dy);
+    if(dist < obj.radius + 10){
+      if(obj.type === 'coin'){ coinsCollected++; gameObjects.splice(i, 1); spawnGameItem(); }
+      else { coinsCollected = Math.max(0, coinsCollected - 5); gameObjects.splice(i, 1); spawnGameItem(); }
+    }
+  }
+  if(gameObjects.length < 9 && Math.random() < .08) spawnGameItem();
+  ctx.beginPath();
+  ctx.arc(playerX, playerY, 12, 0, Math.PI * 2);
+  ctx.fillStyle = '#2ecc71';
+  ctx.fill();
+  ctx.lineWidth = 2;
+  ctx.strokeStyle = '#f5e6c8';
+  ctx.stroke();
+  ctx.closePath();
+  document.getElementById('frenzyStatusText').textContent = 'Coins Collected: ' + coinsCollected + '/25 (Harsh Penalties on Hazards!)';
+  if(coinsCollected >= 25){
+    frenzyRunning = false;
+    window.removeEventListener('keydown', onKeyDown);
+    window.removeEventListener('keyup', onKeyUp);
+    document.getElementById('frenzyCanvas').onmousemove = null;
+    updateProfileField('last_frenzy', new Date().toISOString()).then(function(){
+      addPoints(2000, 'frenzy').then(function(){
+        closeFrenzyModal();
+        showToast('Coin Frenzy Victory! Collected +2,000 Points ($0.004).', 'success');
+        createNotification('Coin Frenzy Win', 'You earned +2,000 points for winning Coin Frenzy!');
+      });
+    });
+    return;
+  }
+  frenzyAnimId = requestAnimationFrame(frenzyLoop);
+}
+
+async function redeemStoreItem(itemName, cost){
+  if(!currentUser || !userProfile){ showToast('Please sign in first.', 'error'); return; }
+  if(userProfile.points < cost){ showToast('Insufficient points for ' + itemName + '! Grind more.', 'error'); return; }
+  var ok = await addPoints(-cost, 'redeem');
+  if(!ok) return;
+  showToast('Successfully redeemed ' + itemName + '! Reward on the way.', 'success');
+  await createNotification('Redemption Submitted', 'Your ' + itemName + ' redemption is pending approval.');
+}
+
+function openCustomClaimModal(){
+  if(!currentUser || !userProfile){ showToast('Please sign in first.', 'error'); return; }
+  document.getElementById('claimPointsInput').value = '';
+  document.getElementById('modalUsdPreview').textContent = '$0.00 USD';
+  document.getElementById('claimAccountInput').value = '';
+  document.getElementById('claimModal').classList.add('active');
+}
+
+function closeCustomClaimModal(){ document.getElementById('claimModal').classList.remove('active'); }
+
+function calcModalUsd(){
+  var val = parseInt(document.getElementById('claimPointsInput').value, 10) || 0;
+  document.getElementById('modalUsdPreview').textContent = '$' + (val / CONVERSION_RATE).toFixed(2) + ' USD';
+}
+
+async function submitCustomClaim(){
+  if(!currentUser || !userProfile){ showToast('Please sign in first.', 'error'); return; }
+  var pts = parseInt(document.getElementById('claimPointsInput').value, 10);
+  var account = document.getElementById('claimAccountInput').value.trim();
+  var btn = document.getElementById('claimBtn');
+  if(!pts || isNaN(pts) || pts < 500000){ showToast('Minimum custom redemption is 500,000 points ($1.00).', 'error'); return; }
+  if(pts > userProfile.points){ showToast('You do not have enough points for this claim.', 'error'); return; }
+  if(!account){ showToast('Please enter your payout destination or email.', 'error'); return; }
+  btn.disabled = true; btn.textContent = 'Processing...';
+  var usdVal = pts / CONVERSION_RATE;
+  var ok = await addPoints(-pts, 'custom_claim');
+  if(!ok){ btn.disabled = false; btn.textContent = 'Confirm Claim'; return; }
+  try { await supabaseClient.from('claims').insert({user_id: currentUser.id, email: account, claim_number: pts, status: 'pending', item_name: 'Custom Payout'}); }
+  catch(e){ debugLog('Claim log skipped: ' + e.message, 'warn'); }
+  closeCustomClaimModal();
+  showToast('Successfully claimed ' + pts.toLocaleString() + ' points for $' + usdVal.toFixed(2) + '!', 'success');
+  await createNotification('Claim Submitted', 'Your $' + usdVal.toFixed(2) + ' payout claim is pending review.');
+  btn.disabled = false; btn.textContent = 'Confirm Claim';
+}
+
+async function openClaimsModal(){
+  if(!currentUser || !userProfile){ showToast('Please sign in first.', 'error'); return; }
+  document.getElementById('claimsHistoryModal').classList.add('active');
+  var tbody = document.getElementById('claimsHistoryBody');
+  tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--cream-dim);padding:30px">Loading...</td></tr>';
+  try {
+    var res = await supabaseClient.from('claims').select('*').eq('user_id', currentUser.id).order('created_at', {ascending: false}).limit(50);
+    if(res.error || !res.data || res.data.length === 0){
+      tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--cream-dim);padding:30px">No claims yet. Start earning and redeem!</td></tr>';
+      return;
+    }
+    var html = '';
+    for(var i = 0; i < res.data.length; i++){
+      var c = res.data[i];
+      var date = new Date(c.created_at).toLocaleDateString();
+      var usd = (c.claim_number / CONVERSION_RATE).toFixed(2);
+      var statusClass = 'status-' + (c.status || 'pending');
+      var item = c.item_name || 'Custom Payout';
+      html += '<tr><td>' + date + '</td><td>' + escapeHtml(item) + '</td><td>' + c.claim_number.toLocaleString() + '</td><td>$' + usd + '</td><td class="' + statusClass + '">' + (c.status || 'pending').toUpperCase() + '</td></tr>';
+    }
+    tbody.innerHTML = html;
+  } catch(e){
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--cream-dim);padding:30px">Error loading history.</td></tr>';
+  }
+}
+
+function closeClaimsModal(){ document.getElementById('claimsHistoryModal').classList.remove('active'); }
+
+async function loadPaymentProofs(){
+  var grid = document.getElementById('proofsGrid');
+  if(!grid) return;
+  try {
+    var res = await supabaseClient.from('claims').select('claim_number, created_at, profiles(username)').eq('status', 'paid').order('created_at', {ascending: false}).limit(8);
+    if(res.error || !res.data || res.data.length === 0){
+      grid.innerHTML = '<div class="proof-card"><div class="proof-amount" style="font-size:1rem;color:var(--cream-dim)">No paid claims yet. Be the first!</div></div>';
+      return;
+    }
+    var html = '';
+    for(var i = 0; i < res.data.length; i++){
+      var c = res.data[i];
+      var usd = (c.claim_number / CONVERSION_RATE).toFixed(2);
+      var username = (c.profiles && c.profiles.username) ? c.profiles.username : 'User';
+      var anon = username.substring(0, Math.min(3, username.length)) + '***';
+      var date = new Date(c.created_at).toLocaleDateString();
+      html += '<div class="proof-card"><div class="proof-amount">$' + usd + ' USD</div><div class="proof-user">' + escapeHtml(anon) + ' redeemed ' + c.claim_number.toLocaleString() + ' pts</div><div class="proof-date">' + date + '</div></div>';
+    }
+    grid.innerHTML = html;
+  } catch(e){
+    grid.innerHTML = '<div class="proof-card"><div class="proof-amount" style="font-size:1rem;color:var(--cream-dim)">Loading payment proofs...</div></div>';
+  }
 }
 
 function updateReferralUI(){
@@ -79,7 +1400,253 @@ function updateReferralUI(){
   loadReferralStats();
 }
 
-/* remainder of original script continues unchanged */
+async function loadReferralStats(){
+  if(!userProfile || !supabaseClient) return;
+  try {
+    var countRes = await supabaseClient.from('profiles').select('*', {count: 'exact', head: true}).eq('referred_by', userProfile.referral_code);
+    var count = countRes.count || 0;
+    var earnRes = await supabaseClient.from('referral_earnings').select('amount').eq('referrer_id', userProfile.id);
+    var total = 0;
+    if(earnRes.data) for(var i = 0; i < earnRes.data.length; i++) total += earnRes.data[i].amount;
+    document.getElementById('refCount').textContent = count;
+    document.getElementById('refEarnings').textContent = total.toLocaleString();
+  } catch(e){ debugLog('Ref stats error: ' + e.message, 'warn'); }
+}
+
+function copyRefLink(){
+  var text = document.getElementById('refLinkBox').textContent;
+  navigator.clipboard.writeText(text).then(function(){ showToast('Referral link copied!', 'success'); }).catch(function(){ showToast('Failed to copy.', 'error'); });
+}
+
+async function createNotification(title, message){
+  if(!currentUser || !supabaseClient) return;
+  try { await supabaseClient.from('notifications').insert({user_id: currentUser.id, title: title, message: message, read: false}); }
+  catch(e){ debugLog('Notif create error: ' + e.message, 'warn'); }
+}
+
+async function loadNotifications(){
+  if(!currentUser || !supabaseClient) return;
+  try {
+    var res = await supabaseClient.from('notifications').select('*').eq('user_id', currentUser.id).order('created_at', {ascending: false}).limit(20);
+    var list = document.getElementById('notifList');
+    var countEl = document.getElementById('notifCount');
+    if(!list) return;
+    if(res.error || !res.data || res.data.length === 0){
+      list.innerHTML = '<div class="notif-empty">No notifications</div>';
+      if(countEl) countEl.style.display = 'none';
+      return;
+    }
+    var unread = 0;
+    var html = '';
+    for(var i = 0; i < res.data.length; i++){
+      var n = res.data[i];
+      if(!n.read) unread++;
+      var cls = n.read ? 'notif-item' : 'notif-item unread';
+      var time = new Date(n.created_at).toLocaleDateString();
+      html += '<div class="' + cls + '" onclick="CC.markNotifRead(' + "'" + n.id + "'" + ')"><strong>' + escapeHtml(n.title) + '</strong><br>' + escapeHtml(n.message) + '<div class="notif-time">' + time + '</div></div>';
+    }
+    list.innerHTML = html;
+    if(countEl){ countEl.textContent = unread; countEl.style.display = unread > 0 ? 'flex' : 'none'; }
+  } catch(e){ debugLog('Notif load error: ' + e.message, 'warn'); }
+}
+
+async function markNotifRead(id){
+  if(!supabaseClient) return;
+  try { await supabaseClient.from('notifications').update({read: true}).eq('id', id); loadNotifications(); }
+  catch(e){}
+}
+
+function toggleNotifs(){
+  var dd = document.getElementById('notifDropdown');
+  if(dd) dd.classList.toggle('active');
+}function openSpinModal(){
+  if(!currentUser || !userProfile){ showToast('Please sign in first.', 'error'); return; }
+  var cooldown = 24 * 60 * 60 * 1000;
+  if(userProfile.spin_last_date && (Date.now() - new Date(userProfile.spin_last_date).getTime() < cooldown)){
+    showToast('You already spun today! Come back tomorrow.', 'error'); return;
+  }
+  document.getElementById('spinModal').classList.add('active');
+  document.getElementById('spinResult').textContent = '';
+  document.getElementById('spinActionBtn').disabled = false;
+  document.getElementById('spinActionBtn').textContent = 'Spin Now';
+  spinAngle = 0;
+  drawWheel();
+}
+
+function closeSpinModal(){ document.getElementById('spinModal').classList.remove('active'); }
+
+function drawWheel(){
+  var canvas = document.getElementById('spinCanvas');
+  var ctx = canvas.getContext('2d');
+  var cx = canvas.width / 2, cy = canvas.height / 2;
+  var r = canvas.width / 2 - 4;
+  var segAngle = (Math.PI * 2) / spinSegments.length;
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  for(var i = 0; i < spinSegments.length; i++){
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.arc(cx, cy, r, spinAngle + i * segAngle, spinAngle + (i + 1) * segAngle);
+    ctx.fillStyle = spinSegments[i].color;
+    ctx.fill();
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.rotate(spinAngle + i * segAngle + segAngle / 2);
+    ctx.fillStyle = '#fff';
+    ctx.font = 'bold 14px Inter';
+    ctx.fillText(spinSegments[i].label, r * 0.55, 5);
+    ctx.restore();
+  }
+  ctx.beginPath();
+  ctx.arc(cx, cy, 20, 0, Math.PI * 2);
+  ctx.fillStyle = '#1a0a2e';
+  ctx.fill();
+  ctx.strokeStyle = '#d4af37';
+  ctx.lineWidth = 3;
+  ctx.stroke();
+}
+
+function weightedRandomSegment(){
+  var weights = [25, 20, 15, 12, 10, 3, 10, 5];
+  var total = weights.reduce(function(a,b){return a+b;}, 0);
+  var rand = Math.random() * total;
+  for(var i = 0; i < weights.length; i++){
+    rand -= weights[i];
+    if(rand <= 0) return i;
+  }
+  return 0;
+}
+
+function spinWheel(){
+  if(spinAnimating) return;
+  var btn = document.getElementById('spinActionBtn');
+  btn.disabled = true;
+  spinAnimating = true;
+  var targetIdx = weightedRandomSegment();
+  var segAngle = (Math.PI * 2) / spinSegments.length;
+  var extraSpins = 5 + Math.random() * 3;
+  var targetAngle = extraSpins * Math.PI * 2 + (Math.PI * 2 - (targetIdx * segAngle + segAngle / 2)) - Math.PI / 2;
+  var startAngle = spinAngle;
+  var startTime = null;
+  var duration = 4000;
+  function easeOutCubic(t){ return 1 - Math.pow(1 - t, 3); }
+  function animate(time){
+    if(!startTime) startTime = time;
+    var elapsed = time - startTime;
+    var progress = Math.min(elapsed / duration, 1);
+    var eased = easeOutCubic(progress);
+    spinAngle = startAngle + (targetAngle - startAngle) * eased;
+    drawWheel();
+    if(progress < 1){ requestAnimationFrame(animate); }
+    else {
+      spinAnimating = false;
+      var prize = spinSegments[targetIdx].value;
+      document.getElementById('spinResult').textContent = '+' + prize + ' Points!';
+      addPoints(prize, 'spin_wheel').then(function(){
+        updateProfileField('spin_last_date', new Date().toISOString());
+        showToast('You won ' + prize + ' points!', 'success');
+        createNotification('Spin Wheel Win', 'You won ' + prize + ' points on the Lucky Spin!');
+        checkCooldowns();
+      });
+    }
+  }
+  requestAnimationFrame(animate);
+}
+
+async function renderLeaderboard(){
+  var tbody = document.getElementById('leaderboardBody');
+  if(!supabaseClient){ tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--cream-dim);padding:30px">Server unavailable.</td></tr>'; return; }
+  try {
+    var res = await supabaseClient.from('profiles').select('username, points, id').order('points', {ascending: false}).limit(20);
+    if(res.error){ tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--cream-dim);padding:30px">Error loading leaderboard.</td></tr>'; return; }
+    var list = res.data || [];
+    if(list.length === 0){ tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--cream-dim);padding:30px">No players on the leaderboard yet. Be the first!</td></tr>'; return; }
+    var html = '';
+    for(var i = 0; i < list.length; i++){
+      var u = list[i];
+      var usd = (u.points / CONVERSION_RATE).toFixed(2);
+      var isCurrent = currentUser && u.id === currentUser.id;
+      html += '<tr' + (isCurrent ? ' style="background:rgba(212,175,55,.08)"' : '') + '>';
+      html += '<td><span class="rank-num">#' + (i + 1) + '</span></td>';
+      html += '<td>' + escapeHtml(u.username) + (isCurrent ? ' <span style="color:var(--gold);font-size:.75rem">(You)</span>' : '') + '</td>';
+      html += '<td>' + u.points.toLocaleString() + ' pts</td>';
+      html += '<td style="color:var(--emerald);font-weight:600">$' + usd + '</td></tr>';
+    }
+    tbody.innerHTML = html;
+  } catch(err){ debugLog('Leaderboard error: ' + err.message, 'error'); }
+}
+
+async function updateSystemStats(){
+  if(!supabaseClient) return;
+  try {
+    var countRes = await supabaseClient.from('profiles').select('*', {count: 'exact', head: true});
+    var count = countRes.count || 0;
+    document.getElementById('regUsersCount').textContent = count > 0 ? count.toLocaleString() : '--';
+    var sumRes = await supabaseClient.from('profiles').select('points');
+    var total = 0;
+    if(sumRes.data) for(var i = 0; i < sumRes.data.length; i++) total += sumRes.data[i].points;
+    document.getElementById('systemValue').textContent = '$' + (total / CONVERSION_RATE).toFixed(2);
+  } catch(err){ debugLog('Stats error: ' + err.message, 'error'); }
+}
+
+function createParticles(){
+  var container = document.getElementById('particles');
+  for(var i = 0; i < 35; i++){
+    var p = document.createElement('div');
+    p.className = 'particle';
+    p.style.left = Math.random() * 100 + '%';
+    p.style.width = p.style.height = Math.random() * 4 + 2 + 'px';
+    p.style.animationDelay = Math.random() * 8 + 's';
+    p.style.animationDuration = (Math.random() * 4 + 6) + 's';
+    container.appendChild(p);
+  }
+}
+
+window.CC = {
+  openAuthModal: openAuthModal, closeAuthModal: closeAuthModal,
+  switchAuthTab: switchAuthTab, handleRegister: handleRegister,
+  handleLogin: handleLogin, handleLogout: handleLogout,
+  claimDaily: claimDaily, startTriviaModal: startTriviaModal,
+  closeTriviaModal: closeTriviaModal, startPollmaticModal: startPollmaticModal,
+  closePollmaticModal: closePollmaticModal, startMyleadModal: startMyleadModal,
+  closeMyleadModal: closeMyleadModal, startCoinFrenzyModal: startCoinFrenzyModal,
+  closeFrenzyModal: closeFrenzyModal, startFrenzyGame: startFrenzyGame,
+  redeemStoreItem: redeemStoreItem, openCustomClaimModal: openCustomClaimModal,
+  closeCustomClaimModal: closeCustomClaimModal, calcModalUsd: calcModalUsd,
+  submitCustomClaim: submitCustomClaim, toggleDebug: toggleDebug,
+  clearDebug: clearDebug, openClaimsModal: openClaimsModal,
+  closeClaimsModal: closeClaimsModal, copyRefLink: copyRefLink,
+  toggleNotifs: toggleNotifs, markNotifRead: markNotifRead,
+  openSpinModal: openSpinModal, closeSpinModal: closeSpinModal,
+  spinWheel: spinWheel
+};
+
+document.addEventListener('DOMContentLoaded', async function(){
+  document.addEventListener('mousemove', function(){ mouseMoves++; });
+  userFingerprint = generateFingerprint();
+  await detectIP();
+  createParticles();
+  initSupabase();
+  var fallbackTimer = setTimeout(function(){
+    if(!securityCheckComplete){
+      securityCheckComplete = true;
+      if(!securityBlocked) hideSessionCheck();
+    }
+  }, 6000);
+  await runSecurityCheck();
+  if(!securityCheckComplete){
+    securityCheckComplete = true;
+    clearTimeout(fallbackTimer);
+    if(!securityBlocked) hideSessionCheck();
+  }
+});
+
+// PWA Service Worker
+if('serviceWorker' in navigator){
+  var swCode = `self.addEventListener('install',function(e){self.skipWaiting();});self.addEventListener('activate',function(e){e.waitUntil(clients.claim());});self.addEventListener('fetch',function(e){e.respondWith(fetch(e.request).catch(function(){return new Response('Offline');}));});`;
+  var swBlob = new Blob([swCode], {type: 'application/javascript'});
+  var swUrl = URL.createObjectURL(swBlob);
+  navigator.serviceWorker.register(swUrl).then(function(){console.log('SW registered');}).catch(function(e){console.log('SW error',e);});
+}
 
 })();
 </script>
