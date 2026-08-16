@@ -1388,12 +1388,16 @@ async function loadPaymentProofs(){
   }
 }
 
+// ===== FIXED REFERRAL FUNCTIONS =====
 function updateReferralUI(){
   if(!userProfile) return;
   if(!userProfile.referral_code){
     var newCode = generateReferralCode();
     userProfile.referral_code = newCode;
-    supabaseClient.from('profiles').update({referral_code: newCode}).eq('id', userProfile.id);
+    supabaseClient.from('profiles').update({referral_code: newCode}).eq('id', userProfile.id).then(function(res){
+      if(res.error) debugLog('Referral code save failed: ' + res.error.message, 'error');
+      else debugLog('Referral code saved: ' + newCode, 'success');
+    });
   }
   var box = document.getElementById('refLinkBox');
   if(box) box.textContent = window.location.origin + window.location.pathname + '?ref=' + userProfile.referral_code;
@@ -1403,8 +1407,7 @@ function updateReferralUI(){
 async function loadReferralStats(){
   if(!userProfile || !supabaseClient) return;
   try {
-    var countRes = await supabaseClient.from('profiles').select('*', {count: 'exact', head: true}).eq('referred_by', userProfile.referral_code);
-    var count = countRes.count || 0;
+    var count = userProfile.referral_signups || 0;
     var earnRes = await supabaseClient.from('referral_earnings').select('amount').eq('referrer_id', userProfile.id);
     var total = 0;
     if(earnRes.data) for(var i = 0; i < earnRes.data.length; i++) total += earnRes.data[i].amount;
@@ -1412,6 +1415,7 @@ async function loadReferralStats(){
     document.getElementById('refEarnings').textContent = total.toLocaleString();
   } catch(e){ debugLog('Ref stats error: ' + e.message, 'warn'); }
 }
+// ===== END FIXED REFERRAL FUNCTIONS =====
 
 function copyRefLink(){
   var text = document.getElementById('refLinkBox').textContent;
