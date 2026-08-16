@@ -1625,7 +1625,8 @@ window.CC = {
 };
 
 document.addEventListener('DOMContentLoaded', async function(){
-  document.addEventListener('mousemove', function(){ mouseMoves++; });
+document.addEventListener('mousemove', function(){ mouseMoves++; });
+document.addEventListener('touchstart', function(){ mouseMoves++; });
   userFingerprint = generateFingerprint();
   await detectIP();
   createParticles();
