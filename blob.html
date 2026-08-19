@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CrownCash Admin</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{--gold:#d4af37;--gold-light:#f4d03f;--gold-dark:#b8860b;--royal-purple:#1a0a2e;--royal-deep:#0d0418;--cream:#f5e6c8;--cream-dim:#c9b896;--emerald:#2ecc71;--red:#e74c3c;--amber:#f39c12;--blue:#3498db;}
+body{font-family:'Inter',sans-serif;background:var(--royal-deep);color:var(--cream);min-height:100vh;padding:30px}
+h1{font-family:'Cinzel',serif;color:var(--gold-light);font-size:2rem;margin-bottom:25px;text-align:center}
+.tabs{display:flex;gap:10px;margin-bottom:25px;flex-wrap:wrap}
+.tab{padding:10px 20px;background:rgba(212,175,55,.06);border:1px solid rgba(212,175,55,.15);border-radius:8px;color:var(--cream-dim);cursor:pointer;font-weight:600;transition:all .3s}
+.tab.active{background:rgba(212,175,55,.15);border-color:var(--gold);color:var(--gold-light)}
+.panel{display:none}
+.panel.active{display:block}
+table{width:100%;border-collapse:collapse;font-size:.85rem;background:rgba(0,0,0,.2);border-radius:12px;overflow:hidden}
+th,td{padding:12px 15px;text-align:left;border-bottom:1px solid rgba(212,175,55,.1)}
+th{background:rgba(212,175,55,.08);color:var(--gold);font-family:'Cinzel',serif;font-size:.75rem;text-transform:uppercase;letter-spacing:1px}
+tr:hover td{background:rgba(212,175,55,.03)}
+.btn-sm{padding:6px 12px;border:none;border-radius:6px;font-size:.75rem;font-weight:700;cursor:pointer;margin-right:5px}
+.btn-success{background:var(--emerald);color:#fff}
+.btn-danger{background:var(--red);color:#fff}
+.btn-secondary{background:rgba(212,175,55,.1);color:var(--cream);border:1px solid rgba(212,175,55,.2)}
+.btn-blue{background:var(--blue);color:#fff}
+.status-pending{color:var(--amber)}
+.status-approved{color:var(--emerald)}
+.status-denied{color:var(--red)}
+.status-paid{color:var(--blue)}
+.fraud-tag{background:var(--red);color:#fff;font-size:.65rem;padding:2px 8px;border-radius:10px;margin-left:5px}
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:15px;margin-bottom:25px}
+.stat-card{background:rgba(0,0,0,.25);border:1px solid rgba(212,175,55,.15);border-radius:12px;padding:20px;text-align:center}
+.stat-card .num{font-family:'Cinzel',serif;font-size:1.6rem;color:var(--gold-light)}
+.stat-card .lbl{font-size:.7rem;color:var(--cream-dim);text-transform:uppercase;letter-spacing:1px;margin-top:5px}
+.search-box{width:100%;padding:12px 16px;background:rgba(0,0,0,.3);border:1px solid rgba(212,175,55,.2);border-radius:10px;color:var(--cream);font-size:.9rem;margin-bottom:20px;outline:none}
+.search-box:focus{border-color:var(--gold)}
+.modal-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(5,2,10,.9);display:none;align-items:center;justify-content:center;z-index:100;padding:20px}
+.modal-overlay.active{display:flex}
+.modal{background:linear-gradient(145deg,rgba(26,10,46,.98),rgba(13,4,24,.99));border:1px solid rgba(212,175,55,.2);border-radius:16px;padding:30px;max-width:500px;width:100%}
+.modal h3{font-family:'Cinzel',serif;color:var(--gold-light);margin-bottom:15px}
+.modal input,.modal textarea{width:100%;padding:12px;background:rgba(0,0,0,.3);border:1px solid rgba(212,175,55,.2);border-radius:8px;color:var(--cream);margin-bottom:12px;outline:none}
+.modal textarea{min-height:80px;resize:vertical}
+.toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%) translateY(100px);background:linear-gradient(145deg,rgba(26,10,46,.98),rgba(13,4,24,.99));border:1px solid rgba(212,175,55,.2);padding:14px 24px;border-radius:10px;color:var(--cream);font-weight:500;z-index:200;opacity:0;transition:all .4s}
+.toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+.toast.success{border-color:rgba(46,204,113,.4);color:var(--emerald)}
+.toast.error{border-color:rgba(231,76,60,.4);color:var(--red)}
+.hidden{display:none!important}
+.pagination{display:flex;gap:10px;justify-content:center;margin-top:20px}
+.pagination button{padding:8px 14px;background:rgba(212,175,55,.1);border:1px solid rgba(212,175,55,.2);border-radius:6px;color:var(--cream);cursor:pointer}
+.pagination button:disabled{opacity:.4;cursor:not-allowed}
+.debug-box{background:rgba(231,76,60,.1);border:1px solid rgba(231,76,60,.3);border-radius:10px;padding:15px;margin-bottom:20px;font-size:.8rem;color:#ff9f9f;font-family:"JetBrains Mono",monospace;white-space:pre-wrap;max-height:300px;overflow-y:auto}
+</style>
+<base target="_blank">
+</head>
+<body>
+
+<h1>CrownCash Admin Dashboard</h1>
+
+<div class="debug-box" id="debugBox">Script starting...</div>
+
+<div class="stats-grid">
+  <div class="stat-card"><div class="num" id="statUsers">--</div><div class="lbl">Total Users</div></div>
+  <div class="stat-card"><div class="num" id="statPoints">--</div><div class="lbl">Total Points</div></div>
+  <div class="stat-card"><div class="num" id="statClaims">--</div><div class="lbl">Pending Claims</div></div>
+  <div class="stat-card"><div class="num" id="statValue">--</div><div class="lbl">System Value</div></div>
+  <div class="stat-card"><div class="num" id="statPostbacks">--</div><div class="lbl">Today's Postbacks</div></div>
+  <div class="stat-card"><div class="num" id="statReferrals">--</div><div class="lbl">Total Referrals</div></div>
+</div>
+
+<div class="tabs">
+  <div class="tab active" onclick="switchTab('claims')">Claims</div>
+  <div class="tab" onclick="switchTab('users')">Users</div>
+  <div class="tab" onclick="switchTab('postbacks')">Postback Logs</div>
+  <div class="tab" onclick="switchTab('referrals')">Referral Earnings</div>
+  <div class="tab" onclick="switchTab('fraud')">Fraud Flags</div>
+</div>
+
+<div id="panel-claims" class="panel active">
+  <input type="text" class="search-box" id="claimSearch" placeholder="Search by email, username, or item..." oninput="filterClaims()">
+  <div style="overflow-x:auto">
+    <table>
+      <thead><tr><th>Date</th><th>User</th><th>Email</th><th>Item</th><th>Points</th><th>USD</th><th>Status</th><th>Actions</th></tr></thead>
+      <tbody id="claimsBody"><tr><td colspan="8" style="text-align:center;padding:30px">Loading...</td></tr></tbody>
+    </table>
+  </div>
+  <div class="pagination" id="claimsPagination"></div>
+</div>
+
+<div id="panel-users" class="panel">
+  <input type="text" class="search-box" id="userSearch" placeholder="Search by username or email..." oninput="filterUsers()">
+  <div style="overflow-x:auto">
+    <table>
+      <thead><tr><th>User</th><th>Points</th><th>Referral Code</th><th>Signups</th><th>Streak</th><th>IP</th><th>Fraud</th><th>Actions</th></tr></thead>
+      <tbody id="usersBody"><tr><td colspan="8" style="text-align:center;padding:30px">Loading...</td></tr></tbody>
+    </table>
+  </div>
+  <div class="pagination" id="usersPagination"></div>
+</div>
+
+<div id="panel-postbacks" class="panel">
+  <input type="text" class="search-box" id="postbackSearch" placeholder="Search by user ID, source, or transaction..." oninput="filterPostbacks()">
+  <div style="overflow-x:auto">
+    <table>
+      <thead><tr><th>Time</th><th>User</th><th>Source</th><th>Raw $</th><th>Points</th><th>Transaction</th><th>Params</th></tr></thead>
+      <tbody id="postbacksBody"><tr><td colspan="7" style="text-align:center;padding:30px">Loading...</td></tr></tbody>
+    </table>
+  </div>
+  <div class="pagination" id="postbacksPagination"></div>
+</div>
+
+<div id="panel-referrals" class="panel">
+  <div style="overflow-x:auto">
+    <table>
+      <thead><tr><th>Date</th><th>Referrer</th><th>Referred</th><th>Amount</th><th>Source</th></tr></thead>
+      <tbody id="referralsBody"><tr><td colspan="5" style="text-align:center;padding:30px">Loading...</td></tr></tbody>
+    </table>
+  </div>
+  <div class="pagination" id="referralsPagination"></div>
+</div>
+
+<div id="panel-fraud" class="panel">
+  <div style="overflow-x:auto">
+    <table>
+      <thead><tr><th>User</th><th>IP</th><th>Fingerprint</th><th>Flags</th><th>Detected</th><th>Actions</th></tr></thead>
+      <tbody id="fraudBody"><tr><td colspan="6" style="text-align:center;padding:30px">Loading...</td></tr></tbody>
+    </table>
+  </div>
+</div>
+
+<div class="modal-overlay" id="actionModal">
+  <div class="modal">
+    <h3 id="actionTitle">Action</h3>
+    <div id="actionContent"></div>
+    <div style="display:flex;gap:10px;margin-top:15px">
+      <button class="btn-sm btn-success" id="actionConfirm" onclick="confirmAction()">Confirm</button>
+      <button class="btn-sm btn-secondary" onclick="closeModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+'use strict';
+
+var SUPABASE_URL = 'https://rbniyexnrfupubykwezg.supabase.co';
+var SUPABASE_ANON_KEY = 'sb_publishable_RdOlBBkKe46G0Jk5fR1x0Q__PZHxoDW';
+var CONVERSION_RATE = 500000;
+
+var supabaseClient = null;
+var currentTab = 'claims';
+var allClaims = [], allUsers = [], allPostbacks = [], allReferrals = [];
+var claimPage = 0, userPage = 0, postbackPage = 0, referralPage = 0;
+var PAGE_SIZE = 20;
+var pendingAction = null;
+
+function debug(msg){
+  var box = document.getElementById('debugBox');
+  if(box){
+    box.textContent += '\n' + msg;
+    console.log('[ADMIN]', msg);
+  }
+}
+
+function showToast(msg, type){
+  type = type || 'info';
+  var t = document.getElementById('toast');
+  if(!t) return;
+  t.textContent = msg;
+  t.className = 'toast ' + type;
+  setTimeout(function(){ t.classList.add('show'); }, 10);
+  setTimeout(function(){ t.classList.remove('show'); }, 3000);
+}
+
+function escapeHtml(str){
+  if(!str) return '';
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function initSupabase(){
+  debug('1. Script running');
+  debug('2. window.supabase type: ' + typeof window.supabase);
+
+  if(typeof window.supabase === 'undefined'){
+    debug('FATAL: window.supabase is undefined');
+    debug('The Supabase CDN script did not load.');
+    debug('Possible causes:');
+    debug('  - Content Security Policy blocks external scripts');
+    debug('  - CDN URL is blocked by your network');
+    debug('  - Script tag failed to download');
+    showToast('Supabase library failed to load. Check console.', 'error');
+    return;
+  }
+
+  debug('3. createClient type: ' + typeof window.supabase.createClient);
+
+  if(!window.supabase.createClient){
+    debug('FATAL: createClient not found');
+    debug('The loaded Supabase library is wrong version');
+    showToast('Wrong Supabase version', 'error');
+    return;
+  }
+
+  try {
+    supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    debug('4. Supabase client created OK');
+    debug('5. Starting data load...');
+    loadAllData();
+  } catch(e){
+    debug('FATAL: createClient threw: ' + e.message);
+    showToast('Supabase init failed: ' + e.message, 'error');
+  }
+}
+
+async function loadAllData(){
+  try {
+    await loadStats();
+    await loadClaims();
+    await loadUsers();
+    await loadPostbacks();
+    await loadReferrals();
+    await loadFraud();
+    renderClaims();
+    debug('6. All data loaded OK');
+  } catch(e){
+    debug('FATAL loadAllData: ' + e.message);
+  }
+}
+
+async function loadStats(){
+  debug('-> loadStats()');
+  try {
+    var userRes = await supabaseClient.from('profiles').select('*', {count:'exact', head:true});
+    debug('   users: ' + (userRes.error ? 'ERR ' + userRes.error.message : 'OK count=' + (userRes.count || 0)));
+    document.getElementById('statUsers').textContent = (userRes.count || 0).toLocaleString();
+
+    var sumRes = await supabaseClient.from('profiles').select('points');
+    debug('   points: ' + (sumRes.error ? 'ERR ' + sumRes.error.message : 'OK rows=' + (sumRes.data ? sumRes.data.length : 0)));
+    var total = 0;
+    if(sumRes.data) for(var i=0;i<sumRes.data.length;i++) total += sumRes.data[i].points;
+    document.getElementById('statPoints').textContent = total.toLocaleString();
+    document.getElementById('statValue').textContent = '$' + (total/CONVERSION_RATE).toFixed(2);
+
+    var claimRes = await supabaseClient.from('claims').select('*', {count:'exact', head:true}).eq('status','pending');
+    debug('   claims: ' + (claimRes.error ? 'ERR ' + claimRes.error.message : 'OK count=' + (claimRes.count || 0)));
+    document.getElementById('statClaims').textContent = (claimRes.count || 0).toLocaleString();
+
+    var today = new Date().toISOString().split('T')[0];
+    var pbRes = await supabaseClient.from('postback_logs').select('*', {count:'exact', head:true}).gte('created_at', today);
+    debug('   postbacks: ' + (pbRes.error ? 'ERR ' + pbRes.error.message : 'OK count=' + (pbRes.count || 0)));
+    document.getElementById('statPostbacks').textContent = (pbRes.count || 0).toLocaleString();
+
+    var refRes = await supabaseClient.from('referral_earnings').select('*', {count:'exact', head:true});
+    debug('   referrals: ' + (refRes.error ? 'ERR ' + refRes.error.message : 'OK count=' + (refRes.count || 0)));
+    document.getElementById('statReferrals').textContent = (refRes.count || 0).toLocaleString();
+  } catch(e){ 
+    debug('   EXCEPTION: ' + e.message); 
+  }
+}
+
+async function loadClaims(){
+  debug('-> loadClaims()');
+  try {
+    var res = await supabaseClient.from('claims').select('*, profiles(username, email)').order('created_at', {ascending:false}).limit(200);
+    debug('   ' + (res.error ? 'ERR ' + res.error.message : 'OK rows=' + (res.data ? res.data.length : 0)));
+    allClaims = res.data || [];
+  } catch(e){ debug('   EXCEPTION: ' + e.message); }
+}
+
+async function loadUsers(){
+  debug('-> loadUsers()');
+  try {
+    var res = await supabaseClient.from('profiles').select('*').order('points', {ascending:false}).limit(200);
+    debug('   ' + (res.error ? 'ERR ' + res.error.message : 'OK rows=' + (res.data ? res.data.length : 0)));
+    allUsers = res.data || [];
+  } catch(e){ debug('   EXCEPTION: ' + e.message); }
+}
+
+async function loadPostbacks(){
+  debug('-> loadPostbacks()');
+  try {
+    var res = await supabaseClient.from('postback_logs').select('*, profiles(username)').order('created_at', {ascending:false}).limit(200);
+    debug('   ' + (res.error ? 'ERR ' + res.error.message : 'OK rows=' + (res.data ? res.data.length : 0)));
+    allPostbacks = res.data || [];
+  } catch(e){ debug('   EXCEPTION: ' + e.message); }
+}
+
+async function loadReferrals(){
+  debug('-> loadReferrals()');
+  try {
+    var res = await supabaseClient.from('referral_earnings').select('*, referrer:profiles!referrer_id(username), referred:profiles!referred_id(username)').order('created_at', {ascending:false}).limit(200);
+    debug('   ' + (res.error ? 'ERR ' + res.error.message : 'OK rows=' + (res.data ? res.data.length : 0)));
+    allReferrals = res.data || [];
+  } catch(e){ debug('   EXCEPTION: ' + e.message); }
+}
+
+async function loadFraud(){
+  debug('-> loadFraud()');
+  try {
+    var res = await supabaseClient.from('profiles').select('*').not('fraud_flags', 'is', null).order('created_at', {ascending:false}).limit(100);
+    debug('   ' + (res.error ? 'ERR ' + res.error.message : 'OK rows=' + (res.data ? res.data.length : 0)));
+    renderFraudList(res.data || []);
+  } catch(e){ debug('   EXCEPTION: ' + e.message); }
+}
+
+function renderClaims(){
+  var filtered = filterData(allClaims, document.getElementById('claimSearch').value, ['item_name','email','profiles.username']);
+  var start = claimPage * PAGE_SIZE;
+  var page = filtered.slice(start, start + PAGE_SIZE);
+  var html = '';
+  for(var i=0;i<page.length;i++){
+    var c = page[i];
+    var usd = (c.claim_number/CONVERSION_RATE).toFixed(2);
+    var statusClass = 'status-' + (c.status || 'pending');
+    html += '<tr>';
+    html += '<td>' + new Date(c.created_at).toLocaleDateString() + '</td>';
+    html += '<td>' + escapeHtml(c.profiles?.username || 'N/A') + '</td>';
+    html += '<td>' + escapeHtml(c.email || 'N/A') + '</td>';
+    html += '<td>' + escapeHtml(c.item_name || 'Custom') + '</td>';
+    html += '<td>' + c.claim_number.toLocaleString() + '</td>';
+    html += '<td>$' + usd + '</td>';
+    html += '<td class="' + statusClass + '">' + (c.status || 'pending').toUpperCase() + '</td>';
+    html += '<td>';
+    if(c.status === 'pending'){
+      html += '<button class="btn-sm btn-success" onclick="approveClaim('' + c.id + '',' + c.claim_number + ','' + (c.user_id || '') + '')">Approve</button>';
+      html += '<button class="btn-sm btn-danger" onclick="denyClaim('' + c.id + '')">Deny</button>';
+    }
+    html += '<button class="btn-sm btn-blue" onclick="markPaid('' + c.id + '')">Mark Paid</button>';
+    html += '</td></tr>';
+  }
+  document.getElementById('claimsBody').innerHTML = html || '<tr><td colspan="8" style="text-align:center;padding:30px">No claims found</td></tr>';
+  renderPagination('claimsPagination', filtered.length, claimPage, function(p){ claimPage = p; renderClaims(); });
+}
+
+function renderUsers(){
+  var filtered = filterData(allUsers, document.getElementById('userSearch').value, ['username','email']);
+  var start = userPage * PAGE_SIZE;
+  var page = filtered.slice(start, start + PAGE_SIZE);
+  var html = '';
+  for(var i=0;i<page.length;i++){
+    var u = page[i];
+    var fraud = u.fraud_flags ? '<span class="fraud-tag">FLAGGED</span>' : '';
+    html += '<tr>';
+    html += '<td>' + escapeHtml(u.username) + fraud + '</td>';
+    html += '<td>' + u.points.toLocaleString() + '</td>';
+    html += '<td>' + escapeHtml(u.referral_code || 'N/A') + '</td>';
+    html += '<td>' + (u.referral_signups || 0) + '</td>';
+    html += '<td>' + (u.login_streak || 0) + '</td>';
+    html += '<td>' + escapeHtml(u.ip_address || 'N/A') + '</td>';
+    html += '<td>' + (u.fraud_flags ? 'Yes' : 'No') + '</td>';
+    html += '<td>';
+    html += '<button class="btn-sm btn-secondary" onclick="editPoints('' + u.id + '',' + u.points + ','' + escapeHtml(u.username) + '')">Edit Pts</button>';
+    html += '<button class="btn-sm btn-danger" onclick="banUser('' + u.id + '','' + escapeHtml(u.username) + '')">Ban</button>';
+    html += '</td></tr>';
+  }
+  document.getElementById('usersBody').innerHTML = html || '<tr><td colspan="8" style="text-align:center;padding:30px">No users found</td></tr>';
+  renderPagination('usersPagination', filtered.length, userPage, function(p){ userPage = p; renderUsers(); });
+}
+
+function renderPostbacks(){
+  var filtered = filterData(allPostbacks, document.getElementById('postbackSearch').value, ['source','transaction_id','external_id','profiles.username']);
+  var start = postbackPage * PAGE_SIZE;
+  var page = filtered.slice(start, start + PAGE_SIZE);
+  var html = '';
+  for(var i=0;i<page.length;i++){
+    var p = page[i];
+    html += '<tr>';
+    html += '<td>' + new Date(p.created_at).toLocaleString() + '</td>';
+    html += '<td>' + escapeHtml(p.profiles?.username || p.user_id?.slice(0,8)) + '</td>';
+    html += '<td>' + escapeHtml(p.source || 'N/A') + '</td>';
+    html += '<td>$' + (p.raw_amount || 0) + '</td>';
+    html += '<td>' + (p.points_added || 0).toLocaleString() + '</td>';
+    html += '<td>' + escapeHtml(p.transaction_id || 'N/A') + '</td>';
+    html += '<td><button class="btn-sm btn-secondary" onclick="alert('' + escapeHtml(JSON.stringify(p.raw_params || {}).slice(0,200)) + '')">View</button></td>';
+    html += '</tr>';
+  }
+  document.getElementById('postbacksBody').innerHTML = html || '<tr><td colspan="7" style="text-align:center;padding:30px">No postbacks found</td></tr>';
+  renderPagination('postbacksPagination', filtered.length, postbackPage, function(p){ postbackPage = p; renderPostbacks(); });
+}
+
+function renderReferrals(){
+  var start = referralPage * PAGE_SIZE;
+  var page = allReferrals.slice(start, start + PAGE_SIZE);
+  var html = '';
+  for(var i=0;i<page.length;i++){
+    var r = page[i];
+    html += '<tr>';
+    html += '<td>' + new Date(r.created_at).toLocaleDateString() + '</td>';
+    html += '<td>' + escapeHtml(r.referrer?.username || 'N/A') + '</td>';
+    html += '<td>' + escapeHtml(r.referred?.username || 'N/A') + '</td>';
+    html += '<td>' + r.amount.toLocaleString() + '</td>';
+    html += '<td>' + escapeHtml(r.source || 'N/A') + '</td>';
+    html += '</tr>';
+  }
+  document.getElementById('referralsBody').innerHTML = html || '<tr><td colspan="5" style="text-align:center;padding:30px">No referral earnings yet</td></tr>';
+  renderPagination('referralsPagination', allReferrals.length, referralPage, function(p){ referralPage = p; renderReferrals(); });
+}
+
+function renderFraudList(data){
+  var html = '';
+  for(var i=0;i<data.length;i++){
+    var u = data[i];
+    html += '<tr>';
+    html += '<td>' + escapeHtml(u.username) + '</td>';
+    html += '<td>' + escapeHtml(u.ip_address || 'N/A') + '</td>';
+    html += '<td>' + escapeHtml(u.fingerprint_hash?.slice(0,16) || 'N/A') + '</td>';
+    html += '<td>' + escapeHtml(u.fraud_flags || 'N/A') + '</td>';
+    html += '<td>' + new Date(u.created_at).toLocaleDateString() + '</td>';
+    html += '<td><button class="btn-sm btn-secondary" onclick="clearFraud('' + u.id + '')">Clear Flag</button></td>';
+    html += '</tr>';
+  }
+  document.getElementById('fraudBody').innerHTML = html || '<tr><td colspan="6" style="text-align:center;padding:30px">No fraud flags</td></tr>';
+}
+
+function renderFraud(){ /* loaded with loadFraud */ }
+
+function filterData(data, query, fields){
+  if(!query) return data;
+  var q = query.toLowerCase();
+  return data.filter(function(item){
+    for(var i=0;i<fields.length;i++){
+      var val = fields[i].split('.').reduce(function(obj,key){ return obj && obj[key]; }, item);
+      if(val && String(val).toLowerCase().indexOf(q) !== -1) return true;
+    }
+    return false;
+  });
+}
+
+function renderPagination(id, total, current, callback){
+  var pages = Math.ceil(total / PAGE_SIZE);
+  if(pages <= 1){ document.getElementById(id).innerHTML = ''; return; }
+  var html = '';
+  html += '<button ' + (current===0?'disabled':'') + ' onclick="goPage('' + id + '',' + (current-1) + ')">Prev</button>';
+  html += '<span style="padding:8px 14px;color:var(--cream-dim)">' + (current+1) + ' / ' + pages + '</span>';
+  html += '<button ' + (current>=pages-1?'disabled':'') + ' onclick="goPage('' + id + '',' + (current+1) + ')">Next</button>';
+  document.getElementById(id).innerHTML = html;
+  window._pageCallbacks = window._pageCallbacks || {};
+  window._pageCallbacks[id] = callback;
+}
+
+function goPage(id, page){
+  if(window._pageCallbacks && window._pageCallbacks[id]){
+    window._pageCallbacks[id](page);
+  }
+}
+
+function filterClaims(){ claimPage = 0; renderClaims(); }
+function filterUsers(){ userPage = 0; renderUsers(); }
+function filterPostbacks(){ postbackPage = 0; renderPostbacks(); }
+
+function openModal(title, content, action){
+  document.getElementById('actionTitle').textContent = title;
+  document.getElementById('actionContent').innerHTML = content;
+  pendingAction = action;
+  document.getElementById('actionModal').classList.add('active');
+}
+
+function closeModal(){
+  document.getElementById('actionModal').classList.remove('active');
+  pendingAction = null;
+}
+
+function confirmAction(){
+  if(pendingAction) pendingAction();
+  closeModal();
+}
+
+async function approveClaim(id, points, userId){
+  openModal('Approve Claim', 'Approve this claim and deduct ' + points.toLocaleString() + ' points?', async function(){
+    try {
+      await supabaseClient.from('claims').update({status:'approved'}).eq('id', id);
+      showToast('Claim approved', 'success');
+      await loadClaims(); renderClaims(); loadStats();
+    } catch(e){ showToast('Error: ' + e.message, 'error'); }
+  });
+}
+
+async function denyClaim(id){
+  openModal('Deny Claim', 'Deny this claim? Points will be refunded to the user.', async function(){
+    try {
+      await supabaseClient.from('claims').update({status:'denied'}).eq('id', id);
+      showToast('Claim denied', 'success');
+      await loadClaims(); renderClaims(); loadStats();
+    } catch(e){ showToast('Error: ' + e.message, 'error'); }
+  });
+}
+
+async function markPaid(id){
+  openModal('Mark Paid', 'Mark this claim as paid?', async function(){
+    try {
+      await supabaseClient.from('claims').update({status:'paid'}).eq('id', id);
+      showToast('Marked as paid', 'success');
+      await loadClaims(); renderClaims(); loadStats();
+    } catch(e){ showToast('Error: ' + e.message, 'error'); }
+  });
+}
+
+function editPoints(userId, current, username){
+  openModal('Edit Points: ' + username, 
+    '<input type="number" id="editPointsVal" value="' + current + '">',
+    async function(){
+      var val = parseInt(document.getElementById('editPointsVal').value, 10);
+      try {
+        await supabaseClient.from('profiles').update({points:val}).eq('id', userId);
+        showToast('Points updated', 'success');
+        await loadUsers(); renderUsers(); loadStats();
+      } catch(e){ showToast('Error: ' + e.message, 'error'); }
+    }
+  );
+}
+
+function banUser(userId, username){
+  openModal('Ban User: ' + username, 'Are you sure you want to ban this user?', async function(){
+    try {
+      await supabaseClient.from('profiles').update({banned:true}).eq('id', userId);
+      showToast('User banned', 'success');
+      await loadUsers(); renderUsers();
+    } catch(e){ showToast('Error: ' + e.message, 'error'); }
+  });
+}
+
+async function clearFraud(userId){
+  try {
+    await supabaseClient.from('profiles').update({fraud_flags:null}).eq('id', userId);
+    showToast('Fraud flag cleared', 'success');
+    await loadFraud();
+  } catch(e){ showToast('Error: ' + e.message, 'error'); }
+}
+
+window.switchTab = switchTab;
+window.approveClaim = approveClaim;
+window.denyClaim = denyClaim;
+window.markPaid = markPaid;
+window.editPoints = editPoints;
+window.banUser = banUser;
+window.clearFraud = clearFraud;
+window.filterClaims = filterClaims;
+window.filterUsers = filterUsers;
+window.filterPostbacks = filterPostbacks;
+window.confirmAction = confirmAction;
+window.closeModal = closeModal;
+window.goPage = goPage;
+
+// Run immediately - don't wait for DOMContentLoaded
+initSupabase();
+
+})();
+</script>
+</body>
+</html>
